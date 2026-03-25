@@ -959,8 +959,7 @@ mod tests {
         let mut newer = spawn_sleep_process();
         write_session_fixture(&home, &project, older.id(), "ses-older", 10);
         let expected_jsonl = write_session_fixture(&home, &project, newer.id(), "ses-newer", 20);
-        let original_home = std::env::var_os("HOME");
-        std::env::set_var("HOME", &home);
+        let original_home = set_home(&home);
 
         let target = resolve_watch_target(&WatchArgs {
             file: None,
@@ -1000,8 +999,7 @@ mod tests {
         let expected_jsonl =
             write_session_fixture(&home, &other, other_child.id(), "ses-other", 20);
         let _ = expected_jsonl;
-        let original_home = std::env::var_os("HOME");
-        std::env::set_var("HOME", &home);
+        let original_home = set_home(&home);
 
         let target = resolve_watch_target(&WatchArgs {
             file: None,
@@ -1040,8 +1038,7 @@ mod tests {
         let newer_jsonl = write_session_fixture(&home, &project, newer.id(), "ses-newer", 20);
         fs::write(&older_jsonl, "older").unwrap();
         fs::write(&newer_jsonl, "newer\nwith more activity").unwrap();
-        let original_home = std::env::var_os("HOME");
-        std::env::set_var("HOME", &home);
+        let original_home = set_home(&home);
 
         let target = resolve_watch_target(&WatchArgs {
             file: None,
@@ -1126,11 +1123,29 @@ mod tests {
         let _ = child.wait();
     }
 
+    fn set_home(home: &Path) -> Option<OsString> {
+        let original = std::env::var_os("HOME");
+        std::env::set_var("HOME", home);
+        #[cfg(windows)]
+        {
+            std::env::set_var("USERPROFILE", home);
+        }
+        original
+    }
+
     fn restore_home(original_home: Option<OsString>) {
         if let Some(home) = original_home {
-            std::env::set_var("HOME", home);
+            std::env::set_var("HOME", &home);
+            #[cfg(windows)]
+            {
+                std::env::set_var("USERPROFILE", home);
+            }
         } else {
             std::env::remove_var("HOME");
+            #[cfg(windows)]
+            {
+                std::env::remove_var("USERPROFILE");
+            }
         }
     }
 

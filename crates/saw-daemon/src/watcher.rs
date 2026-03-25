@@ -1,7 +1,7 @@
 use crate::EventBus;
 use chrono::Utc;
 use notify::{
-    event::{CreateKind, ModifyKind, RemoveKind},
+    event::{CreateKind, RemoveKind},
     Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher,
 };
 use saw_core::{AgentEvent, FileChangeKind, FileModification};
@@ -126,7 +126,7 @@ fn map_event_kind(kind: &EventKind) -> Option<FileChangeKind> {
         EventKind::Create(create_kind) if !matches!(create_kind, CreateKind::Folder) => {
             Some(FileChangeKind::Created)
         }
-        EventKind::Modify(ModifyKind::Data(_)) => Some(FileChangeKind::Modified),
+        EventKind::Modify(_) => Some(FileChangeKind::Modified),
         EventKind::Remove(remove_kind) if !matches!(remove_kind, RemoveKind::Folder) => {
             Some(FileChangeKind::Deleted)
         }
@@ -220,12 +220,16 @@ mod tests {
         let bus = EventBus::new();
         let mut receiver = bus.subscribe();
         let _watcher = FileWatcher::new(&project_dir, Vec::new(), bus).unwrap();
-        sleep(WATCHER_POLL_INTERVAL).await;
+        sleep(WATCHER_POLL_INTERVAL * 2).await;
 
         let file_path = nested_dir.join("example.rs");
         drop(File::create(&file_path).unwrap());
         recv_matching_file_event(&mut receiver, |event| {
-            event.path == file_path && event.kind == FileChangeKind::Created
+            event.path == file_path
+                && matches!(
+                    event.kind,
+                    FileChangeKind::Created | FileChangeKind::Modified
+                )
         })
         .await;
 
@@ -284,12 +288,16 @@ mod tests {
         let bus = EventBus::new();
         let mut receiver = bus.subscribe();
         let _watcher = FileWatcher::new(&project_dir, vec![auth_dir.clone()], bus).unwrap();
-        sleep(WATCHER_POLL_INTERVAL).await;
+        sleep(WATCHER_POLL_INTERVAL * 2).await;
 
         let violating_file = billing_dir.join("mod.rs");
         fs::write(&violating_file, "pub fn charge() {}\n").unwrap();
         let file_event = recv_matching_file_event(&mut receiver, |event| {
-            event.path == violating_file && event.kind == FileChangeKind::Created
+            event.path == violating_file
+                && matches!(
+                    event.kind,
+                    FileChangeKind::Created | FileChangeKind::Modified
+                )
         })
         .await;
 

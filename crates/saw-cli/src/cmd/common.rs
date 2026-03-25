@@ -73,9 +73,7 @@ pub struct SessionFile {
 
 impl SessionFile {
     pub fn cwd_path(&self) -> PathBuf {
-        PathBuf::from(&self.cwd)
-            .canonicalize()
-            .unwrap_or_else(|_| PathBuf::from(&self.cwd))
+        normalize_path(Path::new(&self.cwd))
     }
 }
 
@@ -620,9 +618,7 @@ pub fn load_hook_events(
 }
 
 pub fn home_dir() -> Result<PathBuf> {
-    std::env::var_os("HOME")
-        .map(PathBuf::from)
-        .context("HOME is not set; cannot inspect ~/.claude/sessions")
+    dirs::home_dir().context("home directory is not set; cannot inspect ~/.claude/sessions")
 }
 
 #[allow(dead_code)]
@@ -646,7 +642,7 @@ pub fn choose_session(
     let matching = cwd.map(|preferred| {
         sessions
             .iter()
-            .filter(|(_, session)| session.cwd_path() == preferred)
+            .filter(|(_, session)| paths_match(session.cwd_path().as_path(), preferred))
             .cloned()
             .collect::<Vec<_>>()
     });
@@ -688,12 +684,12 @@ pub fn sessions_for_cwd(
     sessions: &[SessionSelection],
     cwd: Option<&Path>,
 ) -> Vec<SessionSelection> {
-    let preferred_cwd = cwd.map(|path| path.canonicalize().unwrap_or_else(|_| path.to_path_buf()));
+    let preferred_cwd = cwd.map(normalize_path);
 
     match preferred_cwd.as_deref() {
         Some(preferred) => sessions
             .iter()
-            .filter(|selection| selection.session.cwd_path() == preferred)
+            .filter(|selection| paths_match(selection.session.cwd_path().as_path(), preferred))
             .cloned()
             .collect(),
         None => sessions.to_vec(),
@@ -867,7 +863,20 @@ pub fn session_jsonl_path(home: &Path, session: &SessionFile) -> Result<PathBuf>
 }
 
 pub fn path_to_slug(path: &Path) -> String {
-    path.to_string_lossy().replace('/', "-")
+    path.to_string_lossy().replace(['/', '\\'], "-")
+}
+
+fn normalize_path(path: &Path) -> PathBuf {
+    path.canonicalize().unwrap_or_else(|_| path.to_path_buf())
+}
+
+fn paths_match(left: &Path, right: &Path) -> bool {
+    normalize_path(left) == normalize_path(right)
+}
+
+#[cfg(test)]
+fn portable_display(path: &Path) -> String {
+    path.to_string_lossy().replace('\\', "/")
 }
 
 pub fn normalize_guard_paths(cwd: &Path, guards: &[PathBuf]) -> Vec<PathBuf> {
@@ -1020,11 +1029,12 @@ mod tests {
     use super::{
         append_hook_event, choose_session, collect_snapshot, hook_log_path,
         list_alive_session_selections, load_hook_events, normalize_guard_paths, path_to_slug,
-        phase_label, refresh_task_context, save_checkpoint, session_activity_key,
+        phase_label, portable_display, refresh_task_context, save_checkpoint, session_activity_key,
         session_jsonl_path, snapshot_json, status_exit_code, AgentEvent, AgentPhase, SessionFile,
         Snapshot,
     };
     use chrono::Utc;
+    use std::ffi::OsString;
     use std::fs;
     use std::path::{Path, PathBuf};
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -1288,12 +1298,18 @@ mod tests {
         )
         .unwrap();
 
+        let _lock = super::home_env_test_lock();
+        let home = unique_temp_dir("status-snapshot-home");
+        let original_home = set_home(&home);
+
         let snapshot = collect_snapshot(Some(&jsonl), &cwd, 130, &[], None, false).unwrap();
 
         assert_eq!(snapshot.session_file, Some(jsonl.clone()));
         assert_eq!(snapshot.state.session_id.as_deref(), Some("ses-123"));
         assert_eq!(snapshot.state.session_jsonl_path, Some(jsonl));
         assert!(matches!(snapshot.phase, AgentPhase::Dead));
+
+        restore_home(original_home);
     }
 
     #[test]
@@ -1305,8 +1321,7 @@ mod tests {
         let mut newer = spawn_sleep_process();
         let older_jsonl = write_session_fixture(&home, &project, older.id(), "ses-older", 10);
         let newer_jsonl = write_session_fixture(&home, &project, newer.id(), "ses-newer", 20);
-        let original_home = std::env::var_os("HOME");
-        std::env::set_var("HOME", &home);
+        let original_home = set_home(&home);
 
         let snapshot = collect_snapshot(
             Some(&older_jsonl),
@@ -1328,11 +1343,7 @@ mod tests {
         assert!(snapshot.state.process_alive);
         assert_ne!(snapshot.session_file, Some(newer_jsonl));
 
-        if let Some(home) = original_home {
-            std::env::set_var("HOME", home);
-        } else {
-            std::env::remove_var("HOME");
-        }
+        restore_home(original_home);
         terminate(&mut older);
         terminate(&mut newer);
     }
@@ -1452,21 +1463,40 @@ mod tests {
 
         let json = snapshot_json(&snapshot);
 
-        assert_eq!(json.cwd, "/repo");
+        assert_eq!(portable_display(Path::new(&json.cwd)), "/repo");
         assert_eq!(json.pid, Some(42));
         assert_eq!(json.session_id.as_deref(), Some("ses-123"));
-        assert_eq!(json.session_file.as_deref(), Some("/repo/session.jsonl"));
+        assert_eq!(
+            json.session_file
+                .as_deref()
+                .map(|value| portable_display(Path::new(value))),
+            Some("/repo/session.jsonl".to_string())
+        );
         assert_eq!(json.phase, "WORKING");
-        assert_eq!(json.last_file.as_deref(), Some("src/auth/login.rs"));
+        assert_eq!(
+            json.last_file
+                .as_deref()
+                .map(|value| value.replace('\\', "/")),
+            Some("src/auth/login.rs".to_string())
+        );
         assert_eq!(json.silence_secs, 3);
         assert_eq!(json.cpu_percent, 12.4);
         assert_eq!(json.compact_count, 2);
         assert_eq!(json.last_tool.as_deref(), Some("Edit"));
         assert_eq!(json.last_command.as_deref(), Some("cargo test"));
         assert_eq!(json.state.compact_count, 2);
-        assert_eq!(json.guard_paths, vec!["/repo/src/auth".to_string()]);
+        assert_eq!(
+            json.guard_paths
+                .iter()
+                .map(|value| portable_display(Path::new(value)))
+                .collect::<Vec<_>>(),
+            vec!["/repo/src/auth".to_string()]
+        );
         assert_eq!(json.recent_files.len(), 1);
-        assert_eq!(json.recent_files[0].path, "src/auth/login.rs");
+        assert_eq!(
+            json.recent_files[0].path.replace('\\', "/"),
+            "src/auth/login.rs"
+        );
         assert_eq!(json.state.session_id.as_deref(), Some("ses-123"));
         assert_eq!(
             json.state.last_file_path,
@@ -1482,9 +1512,7 @@ mod tests {
         started_at: u64,
     ) -> PathBuf {
         let sessions_dir = home.join(".claude/sessions");
-        let projects_dir = home
-            .join(".claude/projects")
-            .join(project.to_string_lossy().replace('/', "-"));
+        let projects_dir = home.join(".claude/projects").join(path_to_slug(project));
         fs::create_dir_all(&sessions_dir).unwrap();
         fs::create_dir_all(&projects_dir).unwrap();
 
@@ -1507,6 +1535,32 @@ mod tests {
         )
         .unwrap();
         jsonl_path
+    }
+
+    fn set_home(home: &Path) -> Option<OsString> {
+        let original = std::env::var_os("HOME");
+        std::env::set_var("HOME", home);
+        #[cfg(windows)]
+        {
+            std::env::set_var("USERPROFILE", home);
+        }
+        original
+    }
+
+    fn restore_home(original_home: Option<OsString>) {
+        if let Some(home) = original_home {
+            std::env::set_var("HOME", &home);
+            #[cfg(windows)]
+            {
+                std::env::set_var("USERPROFILE", home);
+            }
+        } else {
+            std::env::remove_var("HOME");
+            #[cfg(windows)]
+            {
+                std::env::remove_var("USERPROFILE");
+            }
+        }
     }
 
     fn spawn_sleep_process() -> std::process::Child {
