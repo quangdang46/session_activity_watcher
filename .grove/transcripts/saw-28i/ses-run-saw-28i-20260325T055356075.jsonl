@@ -1,0 +1,31 @@
+{"ts":"2026-03-25T05:53:56.135160884Z","kind":"session_started","session_id":"ses-run-saw-28i-20260325T055356075"}
+{"ts":"2026-03-25T06:05:17.519848363Z","kind":"stdout","line":"Updated `README.md`."}
+{"ts":"2026-03-25T06:05:17.534504625Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T06:05:17.534547684Z","kind":"stdout","line":"What I changed:"}
+{"ts":"2026-03-25T06:05:17.534564887Z","kind":"stdout","line":"- kept the existing comprehensive structure since it already covered the requested sections"}
+{"ts":"2026-03-25T06:05:17.534584175Z","kind":"stdout","line":"- tightened install docs so they match the actual installer behavior in `install.sh:1`"}
+{"ts":"2026-03-25T06:05:17.534599084Z","kind":"stdout","line":"- added copy-pasteable installer variants for `--dest`, `--easy-mode`, and `--uninstall`"}
+{"ts":"2026-03-25T06:05:17.534612012Z","kind":"stdout","line":"- fixed the quick-start checkpoint example so it matches the real `checkpoint-kill` behavior from `crates/saw-daemon/src/alerter.rs:145`"}
+{"ts":"2026-03-25T06:05:17.534652778Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T06:05:17.534663829Z","kind":"stdout","line":"What I verified:"}
+{"ts":"2026-03-25T06:05:17.534674464Z","kind":"stdout","line":"- demo GIF exists at `assets/saw-demo.gif`"}
+{"ts":"2026-03-25T06:05:17.534685202Z","kind":"stdout","line":"- installer help works via `install.sh --help`"}
+{"ts":"2026-03-25T06:05:17.534695837Z","kind":"stdout","line":"- CLI command surface matches docs via `saw --help`, `saw watch --help`, `saw status --help`, `saw tui --help`, `saw config --help`, `saw hook --help`"}
+{"ts":"2026-03-25T06:05:17.534711580Z","kind":"stdout","line":"- local install instructions work with `cargo install --path . --locked`"}
+{"ts":"2026-03-25T06:05:17.534752554Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T06:05:17.534768506Z","kind":"stdout","line":"One notable gap:"}
+{"ts":"2026-03-25T06:05:17.534782372Z","kind":"stdout","line":"- the README still says `Intended license: MIT` because there is no top-level license file yet; I did not invent one"}
+{"ts":"2026-03-25T06:05:17.534803015Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T06:05:17.534817716Z","kind":"stdout","line":"GROVE_RESULT: success  "}
+{"ts":"2026-03-25T06:05:17.534817716Z","kind":"protocol","event":{"type":"result","summary":"success"}}
+{"ts":"2026-03-25T06:05:17.537122787Z","kind":"stdout","line":"GROVE_ARTIFACTS: `README.md:41`, `README.md:91`  "}
+{"ts":"2026-03-25T06:05:17.537122787Z","kind":"protocol","event":{"type":"artifacts","items":["`README.md:41`","`README.md:91`"]}}
+{"ts":"2026-03-25T06:05:17.538929602Z","kind":"stdout","line":"GROVE_LESSONS: Verified docs against live CLI/help output and installer behavior before finalizing examples.  "}
+{"ts":"2026-03-25T06:05:17.538929602Z","kind":"protocol","event":{"type":"lessons","items":["Verified docs against live CLI/help output and installer behavior before finalizing examples."]}}
+{"ts":"2026-03-25T06:05:17.539013113Z","kind":"stdout","line":"GROVE_DECISIONS: Kept the existing README and refined inaccurate sections instead of rewriting from scratch because the repo already had a near-complete document.  "}
+{"ts":"2026-03-25T06:05:17.539013113Z","kind":"protocol","event":{"type":"decision","items":["Kept the existing README and refined inaccurate sections instead of rewriting from scratch because the repo already had a near-complete document."]}}
+{"ts":"2026-03-25T06:05:17.539400958Z","kind":"stdout","line":"GROVE_WARNINGS: No top-level `LICENSE` file exists yet, so the README cannot honestly claim MIT or Apache-2.0 is already in effect.  "}
+{"ts":"2026-03-25T06:05:17.539400958Z","kind":"protocol","event":{"type":"warning","items":["No top-level `LICENSE` file exists yet","so the README cannot honestly claim MIT or Apache-2.0 is already in effect."]}}
+{"ts":"2026-03-25T06:05:17.539464452Z","kind":"stdout","line":"GROVE_EXIT: true"}
+{"ts":"2026-03-25T06:05:17.539464452Z","kind":"protocol","event":{"type":"exit","value":true}}
+{"ts":"2026-03-25T06:05:17.927594173Z","kind":"session_ended","exit_code":0}
