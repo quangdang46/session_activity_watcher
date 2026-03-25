@@ -1084,7 +1084,8 @@ mod tests {
             ),
         ];
 
-        let (_, session) = choose_session(&sessions, Some(&project.canonicalize().unwrap())).unwrap();
+        let (_, session) =
+            choose_session(&sessions, Some(&project.canonicalize().unwrap())).unwrap();
         assert_eq!(session.session_id, "newer");
     }
 
