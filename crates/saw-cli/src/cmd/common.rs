@@ -664,15 +664,15 @@ pub fn choose_session(
 pub fn list_alive_session_selections(home: &Path) -> Result<Vec<SessionSelection>> {
     let mut selections = list_alive_sessions(home)?
         .into_iter()
-        .map(|(pid, session)| {
-            let jsonl_path = session_jsonl_path(home, &session)?;
-            Ok(SessionSelection {
+        .filter_map(|(pid, session)| {
+            let jsonl_path = session_jsonl_path(home, &session).ok()?;
+            Some(SessionSelection {
                 pid,
                 session,
                 jsonl_path,
             })
         })
-        .collect::<Result<Vec<_>>>()?;
+        .collect::<Vec<_>>();
 
     selections.sort_by_key(|selection| {
         Reverse((
