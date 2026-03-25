@@ -314,6 +314,7 @@ mod tests {
         }
     }
 
+    #[cfg(target_os = "linux")]
     fn read_proc_status_rss_bytes(pid: u32) -> u64 {
         let status = std::fs::read_to_string(format!("/proc/{pid}/status")).unwrap();
         let rss_kib = status
