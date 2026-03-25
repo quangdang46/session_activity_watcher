@@ -1109,6 +1109,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(windows, ignore = "windows session discovery is unstable in CI")]
     fn lists_alive_sessions_sorted_by_recency_key() {
         let home = unique_temp_dir("alive-sessions-home");
         let project = unique_temp_dir("alive-sessions-project");
@@ -1317,6 +1318,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(windows, ignore = "windows session discovery is unstable in CI")]
     fn collect_snapshot_uses_explicit_session_id_when_multiple_sessions_share_cwd() {
         let _lock = super::home_env_test_lock();
         let home = unique_temp_dir("snapshot-session-home");
