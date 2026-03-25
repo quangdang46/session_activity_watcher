@@ -403,14 +403,26 @@ mod tests {
     fn set_home(home: &PathBuf) -> Option<OsString> {
         let original = std::env::var_os("HOME");
         std::env::set_var("HOME", home);
+        #[cfg(windows)]
+        {
+            std::env::set_var("USERPROFILE", home);
+        }
         original
     }
 
     fn restore_home(original_home: Option<OsString>) {
         if let Some(home) = original_home {
-            std::env::set_var("HOME", home);
+            std::env::set_var("HOME", &home);
+            #[cfg(windows)]
+            {
+                std::env::set_var("USERPROFILE", home);
+            }
         } else {
             std::env::remove_var("HOME");
+            #[cfg(windows)]
+            {
+                std::env::remove_var("USERPROFILE");
+            }
         }
     }
 }

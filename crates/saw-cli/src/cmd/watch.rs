@@ -1082,7 +1082,7 @@ mod tests {
         let sessions_dir = home.join(".claude/sessions");
         let projects_dir = home
             .join(".claude/projects")
-            .join(project.to_string_lossy().replace('/', "-"));
+            .join(crate::cmd::common::path_to_slug(project));
         fs::create_dir_all(&sessions_dir).unwrap();
         fs::create_dir_all(&projects_dir).unwrap();
 

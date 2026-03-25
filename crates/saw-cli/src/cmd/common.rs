@@ -618,7 +618,11 @@ pub fn load_hook_events(
 }
 
 pub fn home_dir() -> Result<PathBuf> {
-    dirs::home_dir().context("home directory is not set; cannot inspect ~/.claude/sessions")
+    std::env::var_os("HOME")
+        .or_else(|| std::env::var_os("USERPROFILE"))
+        .map(PathBuf::from)
+        .or_else(dirs::home_dir)
+        .context("home directory is not set; cannot inspect ~/.claude/sessions")
 }
 
 #[allow(dead_code)]
@@ -863,7 +867,7 @@ pub fn session_jsonl_path(home: &Path, session: &SessionFile) -> Result<PathBuf>
 }
 
 pub fn path_to_slug(path: &Path) -> String {
-    path.to_string_lossy().replace(['/', '\\'], "-")
+    path.to_string_lossy().replace(['/', '\\', ':'], "-")
 }
 
 fn normalize_path(path: &Path) -> PathBuf {
