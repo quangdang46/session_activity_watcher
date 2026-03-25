@@ -1,0 +1,64 @@
+{"ts":"2026-03-24T14:38:59.927140191Z","kind":"session_started","session_id":"ses-run-saw-uyw-20260324T143859918"}
+{"ts":"2026-03-24T15:05:00.041561347Z","kind":"stdout","line":"GROVE_RESULT: success"}
+{"ts":"2026-03-24T15:05:00.041561347Z","kind":"protocol","event":{"type":"result","summary":"success"}}
+{"ts":"2026-03-24T15:05:00.071035199Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:05:00.071133237Z","kind":"stdout","line":"GROVE_ARTIFACTS:"}
+{"ts":"2026-03-24T15:05:00.071133237Z","kind":"protocol","event":{"type":"artifacts","items":[]}}
+{"ts":"2026-03-24T15:05:00.071154625Z","kind":"stdout","line":"- Updated `crates/saw-core/src/types.rs:255`-`290` to keep separate main vs sidechain JSONL timestamps and track `subagent_count`."}
+{"ts":"2026-03-24T15:05:00.071154625Z","kind":"protocol","event":{"type":"artifacts","items":["Updated `crates/saw-core/src/types.rs:255`-`290` to keep separate main vs sidechain JSONL timestamps and track `subagent_count`."]}}
+{"ts":"2026-03-24T15:05:00.071183996Z","kind":"stdout","line":"- Updated `crates/saw-core/src/types.rs:377`-`518` so sidechain events no longer arm or clear main-session `awaiting_tool_result`, while still recording sidechain activity."}
+{"ts":"2026-03-24T15:05:00.071183996Z","kind":"protocol","event":{"type":"artifacts","items":["Updated `crates/saw-core/src/types.rs:377`-`518` so sidechain events no longer arm or clear main-session `awaiting_tool_result`, while still recording sidechain activity."]}}
+{"ts":"2026-03-24T15:05:00.071192489Z","kind":"stdout","line":"- Confirmed `isSidechain` parsing remains in `crates/saw-core/src/session.rs:10`-`25`."}
+{"ts":"2026-03-24T15:05:00.071192489Z","kind":"protocol","event":{"type":"artifacts","items":["Confirmed `isSidechain` parsing remains in `crates/saw-core/src/session.rs:10`-`25`."]}}
+{"ts":"2026-03-24T15:05:00.071200062Z","kind":"stdout","line":"- Added sidechain/state tests in `crates/saw-core/src/types.rs:595`-`704`."}
+{"ts":"2026-03-24T15:05:00.071200062Z","kind":"protocol","event":{"type":"artifacts","items":["Added sidechain/state tests in `crates/saw-core/src/types.rs:595`-`704`."]}}
+{"ts":"2026-03-24T15:05:00.071205179Z","kind":"stdout","line":"- Added classifier regression test for sidechain silence in `crates/saw-core/src/lib.rs:102`-`123`."}
+{"ts":"2026-03-24T15:05:00.071205179Z","kind":"protocol","event":{"type":"artifacts","items":["Added classifier regression test for sidechain silence in `crates/saw-core/src/lib.rs:102`-`123`."]}}
+{"ts":"2026-03-24T15:05:00.071211012Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:05:00.071213775Z","kind":"stdout","line":"GROVE_LESSONS:"}
+{"ts":"2026-03-24T15:05:00.071213775Z","kind":"protocol","event":{"type":"lessons","items":[]}}
+{"ts":"2026-03-24T15:05:00.071219301Z","kind":"stdout","line":"- The parser was already correct; the real bug was in state application where sidechain events were mutating parent-session hang state."}
+{"ts":"2026-03-24T15:05:00.071219301Z","kind":"protocol","event":{"type":"lessons","items":["The parser was already correct; the real bug was in state application where sidechain events were mutating parent-session hang state."]}}
+{"ts":"2026-03-24T15:05:00.071225339Z","kind":"stdout","line":"- For this repo, “subagent_count” is currently an approximate sidechain activity count, not distinct subagent cardinality, because parent JSONL only exposes `isSidechain` and not a stable subagent ID."}
+{"ts":"2026-03-24T15:05:00.071225339Z","kind":"protocol","event":{"type":"lessons","items":["For this repo, “subagent_count” is currently an approximate sidechain activity count, not distinct subagent cardinality, because parent JSONL only exposes `isSidechain` and not a stable subagent ID."]}}
+{"ts":"2026-03-24T15:05:00.071257575Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:05:00.071261566Z","kind":"stdout","line":"GROVE_DECISIONS:"}
+{"ts":"2026-03-24T15:05:00.071261566Z","kind":"protocol","event":{"type":"decision","items":[]}}
+{"ts":"2026-03-24T15:05:00.071267706Z","kind":"stdout","line":"- Kept monitoring scoped to the parent JSONL only, matching the current Phase 5 note."}
+{"ts":"2026-03-24T15:05:00.071267706Z","kind":"protocol","event":{"type":"decision","items":["Kept monitoring scoped to the parent JSONL only, matching the current Phase 5 note."]}}
+{"ts":"2026-03-24T15:05:00.071298816Z","kind":"stdout","line":"- Treated sidechain activity as informational for scoring, but prevented it from independently arming or resolving `ApiHang`."}
+{"ts":"2026-03-24T15:05:00.071298816Z","kind":"protocol","event":{"type":"decision","items":["Treated sidechain activity as informational for scoring, but prevented it from independently arming or resolving `ApiHang`."]}}
+{"ts":"2026-03-24T15:05:00.071302296Z","kind":"stdout","line":"- Left TUI work untouched because there is no TUI implementation in this checkout yet, and the task marked it optional."}
+{"ts":"2026-03-24T15:05:00.071302296Z","kind":"protocol","event":{"type":"decision","items":["Left TUI work untouched because there is no TUI implementation in this checkout yet, and the task marked it optional."]}}
+{"ts":"2026-03-24T15:05:00.071305673Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:05:00.071307310Z","kind":"stdout","line":"GROVE_WARNINGS:"}
+{"ts":"2026-03-24T15:05:00.071307310Z","kind":"protocol","event":{"type":"warning","items":[]}}
+{"ts":"2026-03-24T15:05:00.071310687Z","kind":"stdout","line":"- `subagent_count` is not exact distinct-agent count with the current JSONL schema."}
+{"ts":"2026-03-24T15:05:00.071310687Z","kind":"protocol","event":{"type":"warning","items":["`subagent_count` is not exact distinct-agent count with the current JSONL schema."]}}
+{"ts":"2026-03-24T15:05:00.071314064Z","kind":"stdout","line":"- No `subagents/<agent>.jsonl` monitoring was added in this pass."}
+{"ts":"2026-03-24T15:05:00.071314064Z","kind":"protocol","event":{"type":"warning","items":["No `subagents/<agent>.jsonl` monitoring was added in this pass."]}}
+{"ts":"2026-03-24T15:05:00.071318362Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:05:00.071320307Z","kind":"stdout","line":"GROVE_EXIT: true"}
+{"ts":"2026-03-24T15:05:00.071320307Z","kind":"protocol","event":{"type":"exit","value":true}}
+{"ts":"2026-03-24T15:05:00.077391586Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:05:00.078943100Z","kind":"stdout","line":"Implemented the fix."}
+{"ts":"2026-03-24T15:05:00.078953845Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:05:00.078956404Z","kind":"stdout","line":"What changed:"}
+{"ts":"2026-03-24T15:05:00.078961214Z","kind":"stdout","line":"- `isSidechain` is still parsed correctly from JSONL in `crates/saw-core/src/session.rs:10`-`25`."}
+{"ts":"2026-03-24T15:05:00.078964079Z","kind":"stdout","line":"- `AgentState` now tracks:"}
+{"ts":"2026-03-24T15:05:00.078966535Z","kind":"stdout","line":"  - `last_main_jsonl_record_at`"}
+{"ts":"2026-03-24T15:05:00.078969503Z","kind":"stdout","line":"  - `last_sidechain_jsonl_record_at`"}
+{"ts":"2026-03-24T15:05:00.078971754Z","kind":"stdout","line":"  - `subagent_count`"}
+{"ts":"2026-03-24T15:05:00.078973903Z","kind":"stdout","line":"  in `crates/saw-core/src/types.rs:255`-`290`."}
+{"ts":"2026-03-24T15:05:00.078976666Z","kind":"stdout","line":"- Sidechain events now update sidechain activity without toggling main-session tool wait state in `crates/saw-core/src/types.rs:377`-`518`."}
+{"ts":"2026-03-24T15:05:00.078979225Z","kind":"stdout","line":"- Weighted activity remains `1.0` for main and `0.3` for sidechain in `crates/saw-core/src/types.rs:392`-`421`."}
+{"ts":"2026-03-24T15:05:00.078982806Z","kind":"stdout","line":"- Added tests covering:"}
+{"ts":"2026-03-24T15:05:00.078985365Z","kind":"stdout","line":"  - weighted sidechain activity"}
+{"ts":"2026-03-24T15:05:00.078988026Z","kind":"stdout","line":"  - sidechain tool call doesn’t arm API wait"}
+{"ts":"2026-03-24T15:05:00.078990072Z","kind":"stdout","line":"  - sidechain tool result doesn’t clear main tool wait"}
+{"ts":"2026-03-24T15:05:00.078992631Z","kind":"stdout","line":"  - sidechain silence alone doesn’t trigger `ApiHang`"}
+{"ts":"2026-03-24T15:05:00.078995189Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:05:00.078997440Z","kind":"stdout","line":"Verification:"}
+{"ts":"2026-03-24T15:05:00.079018419Z","kind":"stdout","line":"- `cargo test -p saw-core`"}
+{"ts":"2026-03-24T15:05:00.079021182Z","kind":"stdout","line":"- Result: 39 passed, 0 failed"}
+{"ts":"2026-03-24T15:05:01.438537369Z","kind":"session_ended","exit_code":0}

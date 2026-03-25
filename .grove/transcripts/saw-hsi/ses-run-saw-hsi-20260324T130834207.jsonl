@@ -1,0 +1,57 @@
+{"ts":"2026-03-24T13:08:34.216932185Z","kind":"session_started","session_id":"ses-run-saw-hsi-20260324T130834207"}
+{"ts":"2026-03-24T13:34:33.478610950Z","kind":"stdout","line":"GROVE_RESULT: success - implemented resilient saw-core JSONL parser in `crates/saw-core/src/session.rs`"}
+{"ts":"2026-03-24T13:34:33.478610950Z","kind":"protocol","event":{"type":"result","summary":"success - implemented resilient saw-core JSONL parser in `crates/saw-core/src/session.rs`"}}
+{"ts":"2026-03-24T13:34:33.507001877Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T13:34:33.507019637Z","kind":"stdout","line":"GROVE_ARTIFACTS:"}
+{"ts":"2026-03-24T13:34:33.507019637Z","kind":"protocol","event":{"type":"artifacts","items":[]}}
+{"ts":"2026-03-24T13:34:33.507912512Z","kind":"stdout","line":"- `crates/saw-core/src/session.rs:10`"}
+{"ts":"2026-03-24T13:34:33.507912512Z","kind":"protocol","event":{"type":"artifacts","items":["`crates/saw-core/src/session.rs:10`"]}}
+{"ts":"2026-03-24T13:34:33.507927311Z","kind":"stdout","line":"- `crates/saw-core/src/types.rs:71`"}
+{"ts":"2026-03-24T13:34:33.507927311Z","kind":"protocol","event":{"type":"artifacts","items":["`crates/saw-core/src/types.rs:71`"]}}
+{"ts":"2026-03-24T13:34:33.507932925Z","kind":"stdout","line":"- `crates/saw-core/src/loop_detector.rs:147`"}
+{"ts":"2026-03-24T13:34:33.507932925Z","kind":"protocol","event":{"type":"artifacts","items":["`crates/saw-core/src/loop_detector.rs:147`"]}}
+{"ts":"2026-03-24T13:34:33.507973649Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T13:34:33.507977834Z","kind":"stdout","line":"GROVE_LESSONS:"}
+{"ts":"2026-03-24T13:34:33.507977834Z","kind":"protocol","event":{"type":"lessons","items":[]}}
+{"ts":"2026-03-24T13:34:33.507984570Z","kind":"stdout","line":"- Claude assistant records may produce either `ToolCall` or `TokenActivity`; token usage should only be emitted when no `tool_use` item exists in the assistant content array."}
+{"ts":"2026-03-24T13:34:33.507984570Z","kind":"protocol","event":{"type":"lessons","items":["Claude assistant records may produce either `ToolCall` or `TokenActivity`; token usage should only be emitted when no `tool_use` item exists in the assistant content array."]}}
+{"ts":"2026-03-24T13:34:33.507992940Z","kind":"stdout","line":"- `<persisted-output>` parsing is safest when scanning past the `Full output saved to:` marker and skipping blank/preview lines."}
+{"ts":"2026-03-24T13:34:33.507992940Z","kind":"protocol","event":{"type":"lessons","items":["`<persisted-output>` parsing is safest when scanning past the `Full output saved to:` marker and skipping blank/preview lines."]}}
+{"ts":"2026-03-24T13:34:33.511406236Z","kind":"stdout","line":"- Sidechain awareness needed to be carried into core event structs so later metrics/classifier code can weight subagent activity correctly."}
+{"ts":"2026-03-24T13:34:33.511406236Z","kind":"protocol","event":{"type":"lessons","items":["Sidechain awareness needed to be carried into core event structs so later metrics/classifier code can weight subagent activity correctly."]}}
+{"ts":"2026-03-24T13:34:33.511470538Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T13:34:33.511475845Z","kind":"stdout","line":"GROVE_DECISIONS:"}
+{"ts":"2026-03-24T13:34:33.511475845Z","kind":"protocol","event":{"type":"decision","items":[]}}
+{"ts":"2026-03-24T13:34:33.511485031Z","kind":"stdout","line":"- Extended `AgentEvent` payloads and `ToolCall` to include `is_sidechain`, and extended `ToolResult` to carry `output`, `stderr`, `interrupted`, and `persisted_output_path`."}
+{"ts":"2026-03-24T13:34:33.511485031Z","kind":"protocol","event":{"type":"decision","items":["Extended `AgentEvent` payloads and `ToolCall` to include `is_sidechain`, and extended `ToolResult` to carry `output`, `stderr`, `interrupted`, and `persisted_output_path`."]}}
+{"ts":"2026-03-24T13:34:33.511494830Z","kind":"stdout","line":"- Kept `SessionRecord::parse(line: &str) -> Option<AgentEvent>` strict and panic-free: malformed or partial JSON returns `None`, while non-signal record types like `progress` and `file-history-snapshot` are ignored."}
+{"ts":"2026-03-24T13:34:33.511494830Z","kind":"protocol","event":{"type":"decision","items":["Kept `SessionRecord::parse(line: &str) -> Option<AgentEvent>` strict and panic-free: malformed or partial JSON returns `None`, while non-signal record types like `progress` and `file-history-snapshot` are ignored."]}}
+{"ts":"2026-03-24T13:34:33.511580565Z","kind":"stdout","line":"- Reused the existing tuple-style `AgentEvent::ToolCall(ToolCall)` model and updated `loop_detector` fixtures to match the richer `ToolCall` schema."}
+{"ts":"2026-03-24T13:34:33.511580565Z","kind":"protocol","event":{"type":"decision","items":["Reused the existing tuple-style `AgentEvent::ToolCall(ToolCall)` model and updated `loop_detector` fixtures to match the richer `ToolCall` schema."]}}
+{"ts":"2026-03-24T13:34:33.511588016Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T13:34:33.511590160Z","kind":"stdout","line":"GROVE_WARNINGS:"}
+{"ts":"2026-03-24T13:34:33.511590160Z","kind":"protocol","event":{"type":"warning","items":[]}}
+{"ts":"2026-03-24T13:34:33.511594038Z","kind":"stdout","line":"- “Partial lines are buffered correctly” is satisfied at the parser contract level by returning `None` for incomplete JSON; actual newline buffering still belongs to the future JSONL tailer task, not `session.rs`."}
+{"ts":"2026-03-24T13:34:33.511594038Z","kind":"protocol","event":{"type":"warning","items":["“Partial lines are buffered correctly” is satisfied at the parser contract level by returning `None` for incomplete JSON; actual newline buffering still belongs to the future JSONL tailer task, not `session.rs`."]}}
+{"ts":"2026-03-24T13:34:33.512011387Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T13:34:33.512017102Z","kind":"stdout","line":"GROVE_EXIT: true"}
+{"ts":"2026-03-24T13:34:33.512017102Z","kind":"protocol","event":{"type":"exit","value":true}}
+{"ts":"2026-03-24T13:34:33.515778240Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T13:34:33.516440854Z","kind":"stdout","line":"Implemented and verified."}
+{"ts":"2026-03-24T13:34:33.516447488Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T13:34:33.516449529Z","kind":"stdout","line":"What changed:"}
+{"ts":"2026-03-24T13:34:33.516451877Z","kind":"stdout","line":"- Added a proper `JsonlRecord` parser in `crates/saw-core/src/session.rs:10`."}
+{"ts":"2026-03-24T13:34:33.516453816Z","kind":"stdout","line":"- Handled assistant/user/system/progress and other known top-level record types without panicking."}
+{"ts":"2026-03-24T13:34:33.516455551Z","kind":"stdout","line":"- Extracted:"}
+{"ts":"2026-03-24T13:34:33.516457286Z","kind":"stdout","line":"  - tool use fields: `name`, `input.file_path`, `input.command`"}
+{"ts":"2026-03-24T13:34:33.516485150Z","kind":"stdout","line":"  - tool result fields: `is_error`, `stderr`, `interrupted`, `content`"}
+{"ts":"2026-03-24T13:34:33.516488212Z","kind":"stdout","line":"  - token usage from `assistant.message.usage`"}
+{"ts":"2026-03-24T13:34:33.516490458Z","kind":"stdout","line":"  - `<persisted-output>` path pointers"}
+{"ts":"2026-03-24T13:34:33.516492295Z","kind":"stdout","line":"  - top-level `isSidechain`"}
+{"ts":"2026-03-24T13:34:33.516494438Z","kind":"stdout","line":"- Extended core event payloads in `crates/saw-core/src/types.rs:71` to carry the parsed metadata."}
+{"ts":"2026-03-24T13:34:33.516496174Z","kind":"stdout","line":"- Updated loop-detector test fixture construction for the new `ToolCall` shape in `crates/saw-core/src/loop_detector.rs:147`."}
+{"ts":"2026-03-24T13:34:33.516498011Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T13:34:33.516499746Z","kind":"stdout","line":"Validation:"}
+{"ts":"2026-03-24T13:34:33.516501583Z","kind":"stdout","line":"- `cargo test -p saw-core`"}
+{"ts":"2026-03-24T13:34:33.516503216Z","kind":"stdout","line":"- Result: 28 passed, 0 failed"}
+{"ts":"2026-03-24T13:34:34.184994813Z","kind":"session_ended","exit_code":0}

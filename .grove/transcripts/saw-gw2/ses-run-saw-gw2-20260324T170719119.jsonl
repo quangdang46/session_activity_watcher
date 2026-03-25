@@ -1,0 +1,55 @@
+{"ts":"2026-03-24T17:07:19.129151992Z","kind":"session_started","session_id":"ses-run-saw-gw2-20260324T170719119"}
+{"ts":"2026-03-24T17:26:51.591494812Z","kind":"stdout","line":"GROVE_RESULT: success"}
+{"ts":"2026-03-24T17:26:51.591494812Z","kind":"protocol","event":{"type":"result","summary":"success"}}
+{"ts":"2026-03-24T17:26:51.721221849Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T17:26:51.721231494Z","kind":"stdout","line":"Implemented the status bar widget and wired it into the TUI."}
+{"ts":"2026-03-24T17:26:51.721252015Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T17:26:51.721254888Z","kind":"stdout","line":"GROVE_ARTIFACTS:"}
+{"ts":"2026-03-24T17:26:51.721254888Z","kind":"protocol","event":{"type":"artifacts","items":[]}}
+{"ts":"2026-03-24T17:26:51.721262481Z","kind":"stdout","line":"- `src/tui/widgets/status_bar.rs`"}
+{"ts":"2026-03-24T17:26:51.721262481Z","kind":"protocol","event":{"type":"artifacts","items":["`src/tui/widgets/status_bar.rs`"]}}
+{"ts":"2026-03-24T17:26:51.721267406Z","kind":"stdout","line":"- `src/tui/widgets/mod.rs`"}
+{"ts":"2026-03-24T17:26:51.721267406Z","kind":"protocol","event":{"type":"artifacts","items":["`src/tui/widgets/mod.rs`"]}}
+{"ts":"2026-03-24T17:26:51.721271715Z","kind":"stdout","line":"- `src/cmd/tui.rs`"}
+{"ts":"2026-03-24T17:26:51.721271715Z","kind":"protocol","event":{"type":"artifacts","items":["`src/cmd/tui.rs`"]}}
+{"ts":"2026-03-24T17:26:51.721276846Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T17:26:51.721279Z","kind":"stdout","line":"GROVE_LESSONS:"}
+{"ts":"2026-03-24T17:26:51.721279Z","kind":"protocol","event":{"type":"lessons","items":[]}}
+{"ts":"2026-03-24T17:26:51.721283310Z","kind":"stdout","line":"- `AgentPhase::TaskBlocked` is a struct variant in current code, so matches must use field patterns."}
+{"ts":"2026-03-24T17:26:51.721283310Z","kind":"protocol","event":{"type":"lessons","items":["`AgentPhase::TaskBlocked` is a struct variant in current code, so matches must use field patterns."]}}
+{"ts":"2026-03-24T17:26:51.721305575Z","kind":"stdout","line":"- `src/cmd/tui.rs` still needs `AgentPhase` imported for existing guard-path logic even after header extraction."}
+{"ts":"2026-03-24T17:26:51.721305575Z","kind":"protocol","event":{"type":"lessons","items":["`src/cmd/tui.rs` still needs `AgentPhase` imported for existing guard-path logic even after header extraction."]}}
+{"ts":"2026-03-24T17:26:51.721311731Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T17:26:51.721314297Z","kind":"stdout","line":"GROVE_DECISIONS:"}
+{"ts":"2026-03-24T17:26:51.721314297Z","kind":"protocol","event":{"type":"decision","items":[]}}
+{"ts":"2026-03-24T17:26:51.721319529Z","kind":"stdout","line":"- Used a dedicated `StatusBar` widget implementing `ratatui::Widget`."}
+{"ts":"2026-03-24T17:26:51.721319529Z","kind":"protocol","event":{"type":"decision","items":["Used a dedicated `StatusBar` widget implementing `ratatui::Widget`."]}}
+{"ts":"2026-03-24T17:26:51.721323941Z","kind":"stdout","line":"- Kept agent name as `\"Claude\"` fallback because current parsed snapshot state does not expose persisted agent-name/custom-title data."}
+{"ts":"2026-03-24T17:26:51.721323941Z","kind":"protocol","event":{"type":"decision","items":["Kept agent name as `\"Claude\"` fallback because current parsed snapshot state does not expose persisted agent-name/custom-title data."]}}
+{"ts":"2026-03-24T17:26:51.721328456Z","kind":"stdout","line":"- Prioritized keeping keybindings visible on narrow widths by allocating space from right to left: keybindings, elapsed, phase, then agent segment truncates first."}
+{"ts":"2026-03-24T17:26:51.721328456Z","kind":"protocol","event":{"type":"decision","items":["Prioritized keeping keybindings visible on narrow widths by allocating space from right to left: keybindings, elapsed, phase, then agent segment truncates first."]}}
+{"ts":"2026-03-24T17:26:51.721351953Z","kind":"stdout","line":"- Replaced the old inline header rendering in `src/cmd/tui.rs:176` with `StatusBar::from_snapshot(snapshot)`."}
+{"ts":"2026-03-24T17:26:51.721351953Z","kind":"protocol","event":{"type":"decision","items":["Replaced the old inline header rendering in `src/cmd/tui.rs:176` with `StatusBar::from_snapshot(snapshot)`."]}}
+{"ts":"2026-03-24T17:26:51.721367241Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T17:26:51.721369088Z","kind":"stdout","line":"GROVE_WARNINGS:"}
+{"ts":"2026-03-24T17:26:51.721369088Z","kind":"protocol","event":{"type":"warning","items":[]}}
+{"ts":"2026-03-24T17:26:51.721372268Z","kind":"stdout","line":"- The “agent name” currently renders as a default `\"Claude\"` label, not a session-specific display name, because that data is not yet stored in `Snapshot`/`AgentState`."}
+{"ts":"2026-03-24T17:26:51.721372268Z","kind":"protocol","event":{"type":"warning","items":["The “agent name” currently renders as a default `\"Claude\"` label, not a session-specific display name, because that data is not yet stored in `Snapshot`/`AgentState`."]}}
+{"ts":"2026-03-24T17:26:51.721375962Z","kind":"stdout","line":"- `cargo test` still emits the pre-existing dead-code warning for `find_session_jsonl` in `src/cmd/common.rs:300`."}
+{"ts":"2026-03-24T17:26:51.721375962Z","kind":"protocol","event":{"type":"warning","items":["`cargo test` still emits the pre-existing dead-code warning for `find_session_jsonl` in `src/cmd/common.rs:300`."]}}
+{"ts":"2026-03-24T17:26:51.721378835Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T17:26:51.721380066Z","kind":"stdout","line":"Key references:"}
+{"ts":"2026-03-24T17:26:51.721381400Z","kind":"stdout","line":"- `src/tui/widgets/status_bar.rs:16`"}
+{"ts":"2026-03-24T17:26:51.721383042Z","kind":"stdout","line":"- `src/tui/widgets/status_bar.rs:46`"}
+{"ts":"2026-03-24T17:26:51.721384376Z","kind":"stdout","line":"- `src/tui/widgets/status_bar.rs:127`"}
+{"ts":"2026-03-24T17:26:51.721385607Z","kind":"stdout","line":"- `src/cmd/tui.rs:4`"}
+{"ts":"2026-03-24T17:26:51.721386941Z","kind":"stdout","line":"- `src/cmd/tui.rs:176`"}
+{"ts":"2026-03-24T17:26:51.721388172Z","kind":"stdout","line":"- `src/tui/widgets/mod.rs:3`"}
+{"ts":"2026-03-24T17:26:51.721389609Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T17:26:51.721390943Z","kind":"stdout","line":"Validation:"}
+{"ts":"2026-03-24T17:26:51.721392276Z","kind":"stdout","line":"- Ran `cargo test status_bar -- --nocapture`"}
+{"ts":"2026-03-24T17:26:51.721393815Z","kind":"stdout","line":"- Result: 5 tests passed"}
+{"ts":"2026-03-24T17:26:51.721395149Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T17:26:51.721396278Z","kind":"stdout","line":"GROVE_EXIT: true"}
+{"ts":"2026-03-24T17:26:51.721396278Z","kind":"protocol","event":{"type":"exit","value":true}}
+{"ts":"2026-03-24T17:26:53.131741505Z","kind":"session_ended","exit_code":0}

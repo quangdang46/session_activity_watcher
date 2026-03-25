@@ -1,0 +1,47 @@
+{"ts":"2026-03-24T12:34:47.698096311Z","kind":"session_started","session_id":"ses-run-saw-1ch-20260324T123447689"}
+{"ts":"2026-03-24T12:54:13.354885366Z","kind":"stdout","line":"GROVE_RESULT: success - saw watch detects ApiHang and prints alert"}
+{"ts":"2026-03-24T12:54:13.354885366Z","kind":"protocol","event":{"type":"result","summary":"success - saw watch detects ApiHang and prints alert"}}
+{"ts":"2026-03-24T12:54:13.414037867Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T12:54:13.414064629Z","kind":"stdout","line":"GROVE_ARTIFACTS:"}
+{"ts":"2026-03-24T12:54:13.414064629Z","kind":"protocol","event":{"type":"artifacts","items":[]}}
+{"ts":"2026-03-24T12:54:13.415113599Z","kind":"stdout","line":"- Updated classifier gating in `crates/saw-core/src/classifier.rs`"}
+{"ts":"2026-03-24T12:54:13.415113599Z","kind":"protocol","event":{"type":"artifacts","items":["Updated classifier gating in `crates/saw-core/src/classifier.rs`"]}}
+{"ts":"2026-03-24T12:54:13.415127700Z","kind":"stdout","line":"- Extended state tracking in `crates/saw-core/src/types.rs`"}
+{"ts":"2026-03-24T12:54:13.415127700Z","kind":"protocol","event":{"type":"artifacts","items":["Extended state tracking in `crates/saw-core/src/types.rs`"]}}
+{"ts":"2026-03-24T12:54:13.415134185Z","kind":"stdout","line":"- Hardened JSONL parsing in `crates/saw-core/src/session.rs`"}
+{"ts":"2026-03-24T12:54:13.415134185Z","kind":"protocol","event":{"type":"artifacts","items":["Hardened JSONL parsing in `crates/saw-core/src/session.rs`"]}}
+{"ts":"2026-03-24T12:54:13.415143449Z","kind":"stdout","line":"- Added classifier/parser tests in `crates/saw-core/src/lib.rs` and `crates/saw-core/src/session.rs`"}
+{"ts":"2026-03-24T12:54:13.415143449Z","kind":"protocol","event":{"type":"artifacts","items":["Added classifier/parser tests in `crates/saw-core/src/lib.rs` and `crates/saw-core/src/session.rs`"]}}
+{"ts":"2026-03-24T12:54:13.415182768Z","kind":"stdout","line":"- Improved session-log discovery in `src/cmd/watch.rs`"}
+{"ts":"2026-03-24T12:54:13.415182768Z","kind":"protocol","event":{"type":"artifacts","items":["Improved session-log discovery in `src/cmd/watch.rs`"]}}
+{"ts":"2026-03-24T12:54:13.415190797Z","kind":"stdout","line":"- Synthetic verification log: `/tmp/saw_api_hang.jsonl`"}
+{"ts":"2026-03-24T12:54:13.415190797Z","kind":"protocol","event":{"type":"artifacts","items":["Synthetic verification log: `/tmp/saw_api_hang.jsonl`"]}}
+{"ts":"2026-03-24T12:54:13.415197076Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T12:54:13.415213853Z","kind":"stdout","line":"GROVE_LESSONS:"}
+{"ts":"2026-03-24T12:54:13.415213853Z","kind":"protocol","event":{"type":"lessons","items":[]}}
+{"ts":"2026-03-24T12:54:13.415227955Z","kind":"stdout","line":"- ApiHang should only trigger while a tool result is still outstanding; otherwise long user silence becomes a false positive."}
+{"ts":"2026-03-24T12:54:13.415227955Z","kind":"protocol","event":{"type":"lessons","items":["ApiHang should only trigger while a tool result is still outstanding; otherwise long user silence becomes a false positive."]}}
+{"ts":"2026-03-24T12:54:13.415263775Z","kind":"stdout","line":"- Session log auto-discovery must filter for actual Claude session logs, not arbitrary repo `.jsonl` files like `.beads/issues.jsonl`."}
+{"ts":"2026-03-24T12:54:13.415263775Z","kind":"protocol","event":{"type":"lessons","items":["Session log auto-discovery must filter for actual Claude session logs, not arbitrary repo `.jsonl` files like `.beads/issues.jsonl`."]}}
+{"ts":"2026-03-24T12:54:13.415271289Z","kind":"stdout","line":"- Claude compact events can appear as `type=system` with `subtype=compact_boundary`, so parser logic should not rely only on top-level `type`."}
+{"ts":"2026-03-24T12:54:13.415271289Z","kind":"protocol","event":{"type":"lessons","items":["Claude compact events can appear as `type=system` with `subtype=compact_boundary`, so parser logic should not rely only on top-level `type`."]}}
+{"ts":"2026-03-24T12:54:13.415305874Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T12:54:13.415311123Z","kind":"stdout","line":"GROVE_DECISIONS:"}
+{"ts":"2026-03-24T12:54:13.415311123Z","kind":"protocol","event":{"type":"decision","items":[]}}
+{"ts":"2026-03-24T12:54:13.415339018Z","kind":"stdout","line":"- Kept Phase 1 scope narrow: pure parser/classifier plus basic `watch` command, without adding daemon/process-monitor scaffolding from later phases."}
+{"ts":"2026-03-24T12:54:13.415339018Z","kind":"protocol","event":{"type":"decision","items":["Kept Phase 1 scope narrow: pure parser/classifier plus basic `watch` command, without adding daemon/process-monitor scaffolding from later phases."]}}
+{"ts":"2026-03-24T12:54:13.415345399Z","kind":"stdout","line":"- Used event-driven `awaiting_tool_result` as the minimal proxy for “tokens frozen / API still pending” in the MVP classifier."}
+{"ts":"2026-03-24T12:54:13.415345399Z","kind":"protocol","event":{"type":"decision","items":["Used event-driven `awaiting_tool_result` as the minimal proxy for “tokens frozen / API still pending” in the MVP classifier."]}}
+{"ts":"2026-03-24T12:54:13.415350031Z","kind":"stdout","line":"- Verified deliverable with a synthetic session log instead of waiting on a live Claude session."}
+{"ts":"2026-03-24T12:54:13.415350031Z","kind":"protocol","event":{"type":"decision","items":["Verified deliverable with a synthetic session log instead of waiting on a live Claude session."]}}
+{"ts":"2026-03-24T12:54:13.415354148Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T12:54:13.415356104Z","kind":"stdout","line":"GROVE_WARNINGS:"}
+{"ts":"2026-03-24T12:54:13.415356104Z","kind":"protocol","event":{"type":"warning","items":[]}}
+{"ts":"2026-03-24T12:54:13.415361559Z","kind":"stdout","line":"- Phase 1 epic still has many bead dependencies open in `.beads/issues.jsonl`, but the requested deliverable is now met by the current MVP implementation."}
+{"ts":"2026-03-24T12:54:13.415361559Z","kind":"protocol","event":{"type":"warning","items":["Phase 1 epic still has many bead dependencies open in `.beads/issues.jsonl`, but the requested deliverable is now met by the current MVP implementation."]}}
+{"ts":"2026-03-24T12:54:13.415366088Z","kind":"stdout","line":"- Current `watch` command is still one-shot over a file snapshot; real-time tailing/process monitoring remains future work."}
+{"ts":"2026-03-24T12:54:13.415366088Z","kind":"protocol","event":{"type":"warning","items":["Current `watch` command is still one-shot over a file snapshot; real-time tailing/process monitoring remains future work."]}}
+{"ts":"2026-03-24T12:54:13.415370206Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T12:54:13.415372470Z","kind":"stdout","line":"GROVE_EXIT: true"}
+{"ts":"2026-03-24T12:54:13.415372470Z","kind":"protocol","event":{"type":"exit","value":true}}
+{"ts":"2026-03-24T12:54:13.963980696Z","kind":"session_ended","exit_code":0}

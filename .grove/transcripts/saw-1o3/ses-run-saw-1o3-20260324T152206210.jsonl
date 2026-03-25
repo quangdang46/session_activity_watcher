@@ -1,0 +1,35 @@
+{"ts":"2026-03-24T15:22:06.241693842Z","kind":"session_started","session_id":"ses-run-saw-1o3-20260324T152206210"}
+{"ts":"2026-03-24T15:50:25.851062514Z","kind":"stdout","line":"GROVE_RESULT: success - added end-to-end ApiHang detection coverage"}
+{"ts":"2026-03-24T15:50:25.851062514Z","kind":"protocol","event":{"type":"result","summary":"success - added end-to-end ApiHang detection coverage"}}
+{"ts":"2026-03-24T15:50:25.971122025Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:50:25.971135158Z","kind":"stdout","line":"GROVE_ARTIFACTS:"}
+{"ts":"2026-03-24T15:50:25.971135158Z","kind":"protocol","event":{"type":"artifacts","items":[]}}
+{"ts":"2026-03-24T15:50:25.971694858Z","kind":"stdout","line":"- Created `tests/e2e/test_api_hang.sh`"}
+{"ts":"2026-03-24T15:50:25.971694858Z","kind":"protocol","event":{"type":"artifacts","items":["Created `tests/e2e/test_api_hang.sh`"]}}
+{"ts":"2026-03-24T15:50:25.971703784Z","kind":"stdout","line":"- Verified with `tests/e2e/test_api_hang.sh`"}
+{"ts":"2026-03-24T15:50:25.971703784Z","kind":"protocol","event":{"type":"artifacts","items":["Verified with `tests/e2e/test_api_hang.sh`"]}}
+{"ts":"2026-03-24T15:50:25.971709325Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:50:25.971711992Z","kind":"stdout","line":"GROVE_LESSONS:"}
+{"ts":"2026-03-24T15:50:25.971711992Z","kind":"protocol","event":{"type":"lessons","items":[]}}
+{"ts":"2026-03-24T15:50:25.971719893Z","kind":"stdout","line":"- The ApiHang alert duration is slightly above 120s in practice, so the test should assert `>= 120s` rather than an exact second."}
+{"ts":"2026-03-24T15:50:25.971719893Z","kind":"protocol","event":{"type":"lessons","items":["The ApiHang alert duration is slightly above 120s in practice, so the test should assert `>= 120s` rather than an exact second."]}}
+{"ts":"2026-03-24T15:50:25.971725741Z","kind":"stdout","line":"- On this shell, `wait` can print harmless “No record of process” messages for already-reaped background jobs during cleanup."}
+{"ts":"2026-03-24T15:50:25.971725741Z","kind":"protocol","event":{"type":"lessons","items":["On this shell, `wait` can print harmless “No record of process” messages for already-reaped background jobs during cleanup."]}}
+{"ts":"2026-03-24T15:50:25.971730974Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:50:25.971733436Z","kind":"stdout","line":"GROVE_DECISIONS:"}
+{"ts":"2026-03-24T15:50:25.971733436Z","kind":"protocol","event":{"type":"decision","items":[]}}
+{"ts":"2026-03-24T15:50:25.971738772Z","kind":"stdout","line":"- Used a synthetic Claude session fixture under a temporary `HOME` so the e2e test exercises the real `saw watch` CLI without depending on a live Claude session."}
+{"ts":"2026-03-24T15:50:25.971738772Z","kind":"protocol","event":{"type":"decision","items":["Used a synthetic Claude session fixture under a temporary `HOME` so the e2e test exercises the real `saw watch` CLI without depending on a live Claude session."]}}
+{"ts":"2026-03-24T15:50:25.973212664Z","kind":"stdout","line":"- Covered both `--on-stuck warn` and `--on-stuck kill`, plus a non-hanging alive case to ensure no action fires when the process is healthy."}
+{"ts":"2026-03-24T15:50:25.973212664Z","kind":"protocol","event":{"type":"decision","items":["Covered both `--on-stuck warn` and `--on-stuck kill`, plus a non-hanging alive case to ensure no action fires when the process is healthy."]}}
+{"ts":"2026-03-24T15:50:25.973219539Z","kind":"stdout","line":"- For the kill case, the test stops the target with `SIGSTOP`, confirms ApiHang detection, then resumes it with `SIGCONT` so the queued SIGINT can terminate it cleanly while keeping control of cleanup."}
+{"ts":"2026-03-24T15:50:25.973219539Z","kind":"protocol","event":{"type":"decision","items":["For the kill case, the test stops the target with `SIGSTOP`, confirms ApiHang detection, then resumes it with `SIGCONT` so the queued SIGINT can terminate it cleanly while keeping control of cleanup."]}}
+{"ts":"2026-03-24T15:50:25.973226105Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:50:25.973228773Z","kind":"stdout","line":"GROVE_WARNINGS:"}
+{"ts":"2026-03-24T15:50:25.973228773Z","kind":"protocol","event":{"type":"warning","items":[]}}
+{"ts":"2026-03-24T15:50:25.973252474Z","kind":"stdout","line":"- The test currently emits benign shell cleanup noise (`wait_for: No record of process ...`) even though it passes."}
+{"ts":"2026-03-24T15:50:25.973252474Z","kind":"protocol","event":{"type":"warning","items":["The test currently emits benign shell cleanup noise (`wait_for: No record of process ...`) even though it passes."]}}
+{"ts":"2026-03-24T15:50:25.973258323Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:50:25.973260272Z","kind":"stdout","line":"GROVE_EXIT: true"}
+{"ts":"2026-03-24T15:50:25.973260272Z","kind":"protocol","event":{"type":"exit","value":true}}
+{"ts":"2026-03-24T15:50:26.710325316Z","kind":"session_ended","exit_code":0}

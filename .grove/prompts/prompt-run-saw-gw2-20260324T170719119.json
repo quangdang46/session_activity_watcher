@@ -1,0 +1,203 @@
+{
+  "prompt_id": "prompt-run-saw-gw2-20260324T170719119",
+  "bead_id": "saw-gw2",
+  "run_id": "run-saw-gw2-20260324T170719119",
+  "session_id": "ses-run-saw-gw2-20260324T170719119",
+  "contract": "SingleTask",
+  "created_at": "2026-03-24T17:07:19.129151992Z",
+  "token_budget": null,
+  "estimated_tokens": 563,
+  "prompt_bytes": 2252,
+  "trimmed": false,
+  "retry_delta_summary": null,
+  "retrieval_query": "implementing OR keybindings OR keybindings OR Keybindings OR positioning",
+  "retrieval_ranking_summary": [
+    "Historical snippet (Score: 4.96)",
+    "Historical snippet (Score: 4.72)",
+    "Historical snippet (Score: 4.72)",
+    "Historical snippet (Score: 4.69)",
+    "Historical snippet (Score: 4.22)"
+  ],
+  "sections": [
+    {
+      "ordinal": 1,
+      "kind": "Contract",
+      "heading": "Execution contract",
+      "included": true,
+      "estimated_tokens": 61,
+      "char_count": 241,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "[EXECUTION CONTRACT]\nComplete this single Grove task end-to-end without entering…"
+    },
+    {
+      "ordinal": 2,
+      "kind": "Task",
+      "heading": "Task",
+      "included": true,
+      "estimated_tokens": 195,
+      "char_count": 778,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "[TASK]\nTitle: Implement saw-cli tui/widgets/status_bar.rs\n\nImplement the status …"
+    },
+    {
+      "ordinal": 3,
+      "kind": "ParentHandoff",
+      "heading": "Parent handoff",
+      "included": true,
+      "estimated_tokens": 20,
+      "char_count": 79,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "Parent saw-h7m (run run-saw-h7m-20260324T143859923) prepared this task: success"
+    },
+    {
+      "ordinal": 4,
+      "kind": "ArchiveSnippet",
+      "heading": "Historical snippet (Score: 4.96)",
+      "included": true,
+      "estimated_tokens": 47,
+      "char_count": 186,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": "22",
+        "playbook_bullet_id": null
+      },
+      "preview": "From .grove/transcripts/saw-1ch/ses-run-saw-1ch-20260324T123447689.jsonl\n...trig…"
+    },
+    {
+      "ordinal": 5,
+      "kind": "ArchiveSnippet",
+      "heading": "Historical snippet (Score: 4.72)",
+      "included": true,
+      "estimated_tokens": 23,
+      "char_count": 92,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": "1250",
+        "playbook_bullet_id": null
+      },
+      "preview": "From .grove/transcripts/saw-1qj/ses-run-saw-1qj-20260324T152621528.jsonl\n<b>Impl…"
+    },
+    {
+      "ordinal": 6,
+      "kind": "ArchiveSnippet",
+      "heading": "Historical snippet (Score: 4.72)",
+      "included": true,
+      "estimated_tokens": 23,
+      "char_count": 92,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": "1434",
+        "playbook_bullet_id": null
+      },
+      "preview": "From .grove/transcripts/saw-26l/ses-run-saw-26l-20260324T163041937.jsonl\n<b>Impl…"
+    },
+    {
+      "ordinal": 7,
+      "kind": "ArchiveSnippet",
+      "heading": "Historical snippet (Score: 4.69)",
+      "included": true,
+      "estimated_tokens": 47,
+      "char_count": 186,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": "23",
+        "playbook_bullet_id": null
+      },
+      "preview": "From .grove/transcripts/saw-1ch/ses-run-saw-1ch-20260324T123447689.jsonl\n...trig…"
+    },
+    {
+      "ordinal": 8,
+      "kind": "ArchiveSnippet",
+      "heading": "Historical snippet (Score: 4.22)",
+      "included": true,
+      "estimated_tokens": 26,
+      "char_count": 103,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": "124",
+        "playbook_bullet_id": null
+      },
+      "preview": "From .grove/transcripts/saw-ox9/ses-run-saw-ox9-20260324T130834208.jsonl\n<b>Impl…"
+    },
+    {
+      "ordinal": 9,
+      "kind": "EscalationContext",
+      "heading": "Escalation context (tier 0)",
+      "included": true,
+      "estimated_tokens": 13,
+      "char_count": 103,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "[ESCALATION CONTEXT]\nTier: FirstAttempt (attempt 0)\nInitial attempt. Proceed nor…"
+    },
+    {
+      "ordinal": 10,
+      "kind": "Protocol",
+      "heading": "Grove protocol",
+      "included": true,
+      "estimated_tokens": 94,
+      "char_count": 374,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "[GROVE PROTOCOL]\nEmit GROVE_RESULT, GROVE_ARTIFACTS, GROVE_LESSONS, GROVE_DECISI…"
+    }
+  ]
+}

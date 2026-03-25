@@ -1,0 +1,201 @@
+{
+  "prompt_id": "prompt-run-saw-1fk-20260324T171855632",
+  "bead_id": "saw-1fk",
+  "run_id": "run-saw-1fk-20260324T171855632",
+  "session_id": "ses-run-saw-1fk-20260324T171855632",
+  "contract": "RetryRescue",
+  "created_at": "2026-03-24T17:18:55.635597010Z",
+  "token_budget": null,
+  "estimated_tokens": 688,
+  "prompt_bytes": 2755,
+  "trimmed": false,
+  "retry_delta_summary": "Changed retry framing: breaks the previous stuck loop, requires a different verification path, and forbids repeating the same debugging sequence verbatim.",
+  "retrieval_query": "notifications OR Centralized OR suggestions OR management OR consistent",
+  "retrieval_ranking_summary": [
+    "Historical snippet (Score: 4.35)",
+    "Historical snippet (Score: 4.13)",
+    "Historical snippet (Score: 4.03)"
+  ],
+  "sections": [
+    {
+      "ordinal": 1,
+      "kind": "Contract",
+      "heading": "Execution contract",
+      "included": true,
+      "estimated_tokens": 80,
+      "char_count": 318,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "[EXECUTION CONTRACT]\nRetry the task with a changed approach that avoids repeatin…"
+    },
+    {
+      "ordinal": 2,
+      "kind": "Task",
+      "heading": "Task",
+      "included": true,
+      "estimated_tokens": 218,
+      "char_count": 871,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "[TASK]\nTitle: Implement saw-daemon alerter.rs - alert management\n\nImplement the …"
+    },
+    {
+      "ordinal": 3,
+      "kind": "ParentHandoff",
+      "heading": "Parent handoff",
+      "included": true,
+      "estimated_tokens": 56,
+      "char_count": 224,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "Parent saw-29v (run run-saw-29v-20260324T125416550) prepared this task: success …"
+    },
+    {
+      "ordinal": 4,
+      "kind": "ParentHandoff",
+      "heading": "Parent handoff",
+      "included": true,
+      "estimated_tokens": 18,
+      "char_count": 72,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "Parent saw-l6f (run run-saw-l6f-20260324T161352836) prepared this task: "
+    },
+    {
+      "ordinal": 5,
+      "kind": "ArchiveSnippet",
+      "heading": "Historical snippet (Score: 4.35)",
+      "included": true,
+      "estimated_tokens": 50,
+      "char_count": 202,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": "1019",
+        "playbook_bullet_id": null
+      },
+      "preview": "From .grove/transcripts/saw-26o/ses-run-saw-26o-20260324T151635344.jsonl\n...Inst…"
+    },
+    {
+      "ordinal": 6,
+      "kind": "ArchiveSnippet",
+      "heading": "Historical snippet (Score: 4.13)",
+      "included": true,
+      "estimated_tokens": 50,
+      "char_count": 202,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": "1020",
+        "playbook_bullet_id": null
+      },
+      "preview": "From .grove/transcripts/saw-26o/ses-run-saw-26o-20260324T151635344.jsonl\n...Inst…"
+    },
+    {
+      "ordinal": 7,
+      "kind": "ArchiveSnippet",
+      "heading": "Historical snippet (Score: 4.03)",
+      "included": true,
+      "estimated_tokens": 35,
+      "char_count": 139,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": "156",
+        "playbook_bullet_id": null
+      },
+      "preview": "From .grove/transcripts/saw-ox9/ses-run-saw-ox9-20260324T130834208.jsonl\n...I us…"
+    },
+    {
+      "ordinal": 8,
+      "kind": "EscalationContext",
+      "heading": "Escalation context (tier 0)",
+      "included": true,
+      "estimated_tokens": 13,
+      "char_count": 103,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "[ESCALATION CONTEXT]\nTier: FirstAttempt (attempt 0)\nInitial attempt. Proceed nor…"
+    },
+    {
+      "ordinal": 9,
+      "kind": "Protocol",
+      "heading": "Grove protocol",
+      "included": true,
+      "estimated_tokens": 94,
+      "char_count": 374,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "[GROVE PROTOCOL]\nEmit GROVE_RESULT, GROVE_ARTIFACTS, GROVE_LESSONS, GROVE_DECISI…"
+    },
+    {
+      "ordinal": 10,
+      "kind": "RescueCard",
+      "heading": "Rescue card",
+      "included": true,
+      "estimated_tokens": 58,
+      "char_count": 232,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "- Break the prior loop immediately; choose a different inspection or verificatio…"
+    }
+  ]
+}

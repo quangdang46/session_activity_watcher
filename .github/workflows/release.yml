@@ -1,0 +1,125 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  BIN_NAME: saw
+
+jobs:
+  build:
+    name: Build (${{ matrix.suffix }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            suffix: linux-x86_64
+            archive_ext: tar.gz
+            use_cross: true
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            suffix: linux-aarch64
+            archive_ext: tar.gz
+            use_cross: true
+          - os: macos-13
+            target: x86_64-apple-darwin
+            suffix: macos-x86_64
+            archive_ext: tar.gz
+            use_cross: false
+          - os: macos-14
+            target: aarch64-apple-darwin
+            suffix: macos-aarch64
+            archive_ext: tar.gz
+            use_cross: false
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            suffix: windows-x86_64
+            archive_ext: zip
+            use_cross: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install cross
+        if: ${{ matrix.use_cross }}
+        run: cargo install cross --locked
+
+      - name: Build release binary
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          if [ "${{ matrix.use_cross }}" = "true" ]; then
+            cross build --release --locked --target "$TARGET" --bin "$BIN_NAME"
+          else
+            cargo build --release --locked --target "$TARGET" --bin "$BIN_NAME"
+          fi
+
+      - name: Package Unix archive
+        if: ${{ runner.os != 'Windows' }}
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+          SUFFIX: ${{ matrix.suffix }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          package_dir="$(mktemp -d)"
+          cp "target/$TARGET/release/$BIN_NAME" "$package_dir/$BIN_NAME"
+          tar -czf "dist/${BIN_NAME}-${SUFFIX}.tar.gz" -C "$package_dir" "$BIN_NAME"
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum "dist/${BIN_NAME}-${SUFFIX}.tar.gz" | awk '{print $1}' > "dist/${BIN_NAME}-${SUFFIX}.tar.gz.sha256"
+          else
+            shasum -a 256 "dist/${BIN_NAME}-${SUFFIX}.tar.gz" | awk '{print $1}' > "dist/${BIN_NAME}-${SUFFIX}.tar.gz.sha256"
+          fi
+
+      - name: Package Windows archive
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        env:
+          TARGET: ${{ matrix.target }}
+          SUFFIX: ${{ matrix.suffix }}
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          New-Item -ItemType Directory -Force -Path package | Out-Null
+          Copy-Item "target/$env:TARGET/release/$env:BIN_NAME.exe" "package/$env:BIN_NAME.exe"
+          Compress-Archive -Path "package/$env:BIN_NAME.exe" -DestinationPath "dist/$env:BIN_NAME-$env:SUFFIX.zip" -Force
+          (Get-FileHash "dist/$env:BIN_NAME-$env:SUFFIX.zip" -Algorithm SHA256).Hash.ToLower() | Out-File -FilePath "dist/$env:BIN_NAME-$env:SUFFIX.zip.sha256" -NoNewline -Encoding ascii
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.suffix }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub release
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: release-*
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
