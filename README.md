@@ -44,6 +44,8 @@ cargo install --path . --locked
 curl -fsSL https://raw.githubusercontent.com/quangdang46/session_activity_watcher/main/install.sh | bash
 ```
 
+The installer picks the matching release asset for Linux x86_64/aarch64, macOS x86_64/aarch64, or Windows x86_64. If a prebuilt archive is unavailable, it falls back to a source build.
+
 Useful variants:
 
 ```bash
@@ -51,9 +53,11 @@ curl -fsSL https://raw.githubusercontent.com/quangdang46/session_activity_watche
 curl -fsSL https://raw.githubusercontent.com/quangdang46/session_activity_watcher/main/install.sh | bash -s -- --system
 curl -fsSL https://raw.githubusercontent.com/quangdang46/session_activity_watcher/main/install.sh | bash -s -- --version v0.1.0
 curl -fsSL https://raw.githubusercontent.com/quangdang46/session_activity_watcher/main/install.sh | bash -s -- --from-source --verify
+curl -fsSL https://raw.githubusercontent.com/quangdang46/session_activity_watcher/main/install.sh | bash -s -- --dest "$HOME/bin" --easy-mode
+curl -fsSL https://raw.githubusercontent.com/quangdang46/session_activity_watcher/main/install.sh | bash -s -- --uninstall
 ```
 
-By default the installer writes to `~/.local/bin`. Use `--system` for `/usr/local/bin`, or `--easy-mode` to append the install dir to `~/.bashrc` and `~/.zshrc`.
+By default the installer writes to `~/.local/bin`. Use `--system` for `/usr/local/bin`, `--dest` for a custom location, or `--easy-mode` to append the install dir to `~/.bashrc` and `~/.zshrc`.
 
 ### Build manually
 
@@ -87,7 +91,7 @@ saw watch --dir "$PWD" --guard src/auth --on-scope-leak bell
 ### Save a checkpoint before killing a stuck run
 
 ```bash
-saw watch --dir "$PWD" --checkpoint --on-stuck checkpoint-kill
+saw watch --dir "$PWD" --on-stuck checkpoint-kill
 ```
 
 ### Inspect the current session once
