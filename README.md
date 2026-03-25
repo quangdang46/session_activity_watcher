@@ -27,7 +27,7 @@ The demo shows `saw watch` catching a stuck Claude session and surfacing the ale
 #### Install from GitHub
 
 ```bash
-cargo install --git https://github.com/quangdang46/session_activity_watcher --locked saw
+cargo install --git https://github.com/quangdang46/session_activity_watcher --locked --package saw
 ```
 
 #### Install from a local checkout
@@ -35,13 +35,13 @@ cargo install --git https://github.com/quangdang46/session_activity_watcher --lo
 ```bash
 git clone https://github.com/quangdang46/session_activity_watcher.git
 cd session_activity_watcher
-cargo install --path . --locked
+cargo install --path crates/saw-cli --locked
 ```
 
 ### curl | bash
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/quangdang46/session_activity_watcher/main/install.sh | bash
+curl -fsSL "https://raw.githubusercontent.com/quangdang46/session_activity_watcher/main/install.sh?$(date +%s)" | bash
 ```
 
 The installer picks the matching release asset for Linux x86_64/aarch64, macOS x86_64/aarch64, or Windows x86_64. If a prebuilt archive is unavailable, it falls back to a source build.
@@ -49,20 +49,17 @@ The installer picks the matching release asset for Linux x86_64/aarch64, macOS x
 Useful variants:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/quangdang46/session_activity_watcher/main/install.sh | bash -s -- --verify
-curl -fsSL https://raw.githubusercontent.com/quangdang46/session_activity_watcher/main/install.sh | bash -s -- --system
-curl -fsSL https://raw.githubusercontent.com/quangdang46/session_activity_watcher/main/install.sh | bash -s -- --version v0.1.0
-curl -fsSL https://raw.githubusercontent.com/quangdang46/session_activity_watcher/main/install.sh | bash -s -- --from-source --verify
-curl -fsSL https://raw.githubusercontent.com/quangdang46/session_activity_watcher/main/install.sh | bash -s -- --dest "$HOME/bin" --easy-mode
-curl -fsSL https://raw.githubusercontent.com/quangdang46/session_activity_watcher/main/install.sh | bash -s -- --uninstall
+curl -fsSL "https://raw.githubusercontent.com/quangdang46/session_activity_watcher/main/install.sh?$(date +%s)" | bash -s -- --verify
 ```
+
+Pass installer flags after `bash -s --`, for example `--system`, `--version v0.1.0`, `--from-source`, `--dest "$HOME/bin" --easy-mode`, or `--uninstall`.
 
 By default the installer writes to `~/.local/bin`. Use `--system` for `/usr/local/bin`, `--dest` for a custom location, or `--easy-mode` to append the install dir to `~/.bashrc` and `~/.zshrc`.
 
 ### Build manually
 
 ```bash
-cargo build --release --bin saw
+cargo build --release -p saw --bin saw
 ./target/release/saw --help
 ```
 

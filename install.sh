@@ -15,7 +15,6 @@ UNINSTALL=0
 MAX_RETRIES=3
 DOWNLOAD_TIMEOUT=120
 LOCK_DIR="/tmp/${BINARY_NAME}-install.lock.d"
-LOCK_HELD=0
 TMP=""
 
 log_info() {
@@ -61,15 +60,13 @@ EOF
 }
 
 cleanup() {
-    rm -rf "$TMP" 2>/dev/null || true
-    [ "$LOCK_HELD" -eq 1 ] && rm -rf "$LOCK_DIR" 2>/dev/null || true
+    rm -rf "$TMP" "$LOCK_DIR" 2>/dev/null || true
 }
 
 trap cleanup EXIT
 
 acquire_lock() {
     if mkdir "$LOCK_DIR" 2>/dev/null; then
-        LOCK_HELD=1
         echo $$ > "$LOCK_DIR/pid"
         return 0
     fi
@@ -82,22 +79,23 @@ remove_easy_mode_lines() {
 
     [ -f "$rc" ] || return 0
     tmp_file="${rc}.tmp.$$"
-
     grep -vF "# ${BINARY_NAME} installer" "$rc" > "$tmp_file" 2>/dev/null || true
-    mv "$tmp_file" "$rc" 2>/dev/null || rm -f "$tmp_file"
+    mv -f "$tmp_file" "$rc" 2>/dev/null || rm -f "$tmp_file"
 }
 
 do_uninstall() {
     rm -f "$DEST/$BINARY_NAME" "$DEST/$BINARY_NAME.exe"
-    remove_easy_mode_lines "$HOME/.bashrc"
-    remove_easy_mode_lines "$HOME/.zshrc"
-    log_success "Uninstalled ${BINARY_NAME}"
+    for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
+        remove_easy_mode_lines "$rc"
+    done
+    log_success "Uninstalled"
     exit 0
 }
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --dest)
+            [ $# -ge 2 ] || die "missing value for --dest"
             DEST="$2"
             shift 2
             ;;
@@ -106,6 +104,7 @@ while [ $# -gt 0 ]; do
             shift
             ;;
         --version)
+            [ $# -ge 2 ] || die "missing value for --version"
             VERSION="$2"
             shift 2
             ;;
@@ -208,7 +207,7 @@ resolve_version() {
         --connect-timeout 10 --max-time 30 \
         -H "Accept: application/vnd.github.v3+json" \
         "https://api.github.com/repos/${OWNER}/${REPO}/releases/latest" \
-        2>/dev/null | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1) || true
+        2>/dev/null | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/') || true
 
     if [ -z "$VERSION" ]; then
         VERSION=$(curl -fsSL -o /dev/null -w '%{url_effective}' \
@@ -225,25 +224,28 @@ download_file() {
     local dest="$2"
     local partial="${dest}.part"
     local attempt=0
-    local -a extra_args
+    local -a curl_args
 
     while [ $attempt -lt $MAX_RETRIES ]; do
         attempt=$((attempt + 1))
-        extra_args=()
-        [ -s "$partial" ] && extra_args+=(--continue-at -)
+        curl_args=(
+            -fL
+            --connect-timeout 30
+            --max-time "$DOWNLOAD_TIMEOUT"
+            --retry 2
+        )
 
-        if [ "$QUIET" -eq 0 ] && [ -t 2 ]; then
-            extra_args+=(--progress-bar)
-        else
-            extra_args+=(-sS)
+        if [ -s "$partial" ]; then
+            curl_args+=(--continue-at -)
         fi
 
-        if curl -fL \
-            --connect-timeout 30 \
-            --max-time "$DOWNLOAD_TIMEOUT" \
-            --retry 2 \
-            "${extra_args[@]}" \
-            -o "$partial" "$url"; then
+        if [ "$QUIET" -eq 0 ] && [ -t 2 ]; then
+            curl_args+=(--progress-bar)
+        else
+            curl_args+=(-sS)
+        fi
+
+        if curl "${curl_args[@]}" -o "$partial" "$url"; then
             mv -f "$partial" "$dest"
             return 0
         fi
@@ -277,7 +279,7 @@ verify_checksum() {
     local checksum_path="$TMP/checksum.sha256"
     local expected actual
 
-    if download_file "${url}.sha256" "$checksum_path"; then
+    if download_file "${url}.sha256" "$checksum_path" 2>/dev/null; then
         expected=$(awk '{print $1}' "$checksum_path")
         actual=$(sha256_file "$archive_path")
         [ "$expected" = "$actual" ] || die "Checksum mismatch"
@@ -309,13 +311,7 @@ install_binary_atomic() {
     local dest="$2"
     local tmp="${dest}.tmp.$$"
 
-    if command -v install >/dev/null 2>&1; then
-        install -m 0755 "$src" "$tmp"
-    else
-        cp "$src" "$tmp"
-        chmod 0755 "$tmp"
-    fi
-
+    install -m 0755 "$src" "$tmp"
     mv -f "$tmp" "$dest" || { rm -f "$tmp"; die "Failed to install binary"; }
 }
 
@@ -350,7 +346,7 @@ build_from_source() {
     git clone --depth 1 --branch "$source_ref" "https://github.com/${OWNER}/${REPO}.git" "$TMP/src"
     (
         cd "$TMP/src"
-        CARGO_TARGET_DIR="$TMP/target" cargo build --release --locked --bin "$BINARY_NAME"
+        CARGO_TARGET_DIR="$TMP/target" cargo build --release --locked -p "$BINARY_NAME" --bin "$BINARY_NAME"
     )
     install_binary_atomic "$TMP/target/release/$binary_file" "$DEST/$binary_file"
 }
@@ -361,7 +357,7 @@ install_from_release() {
 
     suffix=$(asset_suffix "$platform")
     ext=$(archive_ext "$platform")
-    archive="${BINARY_NAME}-${suffix}.${ext}"
+    archive="${BINARY_NAME}-${VERSION}-${suffix}.${ext}"
     binary_file=$(binary_filename "$platform")
     url="https://github.com/${OWNER}/${REPO}/releases/download/${VERSION}/${archive}"
 
@@ -393,7 +389,9 @@ main() {
 
     acquire_lock
 
-    [ "$UNINSTALL" -eq 1 ] && do_uninstall
+    if [ "$UNINSTALL" -eq 1 ]; then
+        do_uninstall
+    fi
 
     mkdir -p "$DEST"
     TMP=$(mktemp -d)

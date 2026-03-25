@@ -77,16 +77,18 @@ jobs:
         env:
           TARGET: ${{ matrix.target }}
           SUFFIX: ${{ matrix.suffix }}
+          VERSION: ${{ github.ref_name }}
         run: |
           set -euo pipefail
           mkdir -p dist
           package_dir="$(mktemp -d)"
           cp "target/$TARGET/release/$BIN_NAME" "$package_dir/$BIN_NAME"
-          tar -czf "dist/${BIN_NAME}-${SUFFIX}.tar.gz" -C "$package_dir" "$BIN_NAME"
+          archive="${BIN_NAME}-${VERSION}-${SUFFIX}.tar.gz"
+          tar -czf "dist/$archive" -C "$package_dir" "$BIN_NAME"
           if command -v sha256sum >/dev/null 2>&1; then
-            sha256sum "dist/${BIN_NAME}-${SUFFIX}.tar.gz" | awk '{print $1}' > "dist/${BIN_NAME}-${SUFFIX}.tar.gz.sha256"
+            sha256sum "dist/$archive" | awk '{print $1}' > "dist/$archive.sha256"
           else
-            shasum -a 256 "dist/${BIN_NAME}-${SUFFIX}.tar.gz" | awk '{print $1}' > "dist/${BIN_NAME}-${SUFFIX}.tar.gz.sha256"
+            shasum -a 256 "dist/$archive" | awk '{print $1}' > "dist/$archive.sha256"
           fi
 
       - name: Package Windows archive
@@ -95,12 +97,14 @@ jobs:
         env:
           TARGET: ${{ matrix.target }}
           SUFFIX: ${{ matrix.suffix }}
+          VERSION: ${{ github.ref_name }}
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           New-Item -ItemType Directory -Force -Path package | Out-Null
           Copy-Item "target/$env:TARGET/release/$env:BIN_NAME.exe" "package/$env:BIN_NAME.exe"
-          Compress-Archive -Path "package/$env:BIN_NAME.exe" -DestinationPath "dist/$env:BIN_NAME-$env:SUFFIX.zip" -Force
-          (Get-FileHash "dist/$env:BIN_NAME-$env:SUFFIX.zip" -Algorithm SHA256).Hash.ToLower() | Out-File -FilePath "dist/$env:BIN_NAME-$env:SUFFIX.zip.sha256" -NoNewline -Encoding ascii
+          $archive = "$env:BIN_NAME-$env:VERSION-$env:SUFFIX.zip"
+          Compress-Archive -Path "package/$env:BIN_NAME.exe" -DestinationPath "dist/$archive" -Force
+          (Get-FileHash "dist/$archive" -Algorithm SHA256).Hash.ToLower() | Out-File -FilePath "dist/$archive.sha256" -NoNewline -Encoding ascii
 
       - uses: actions/upload-artifact@v4
         with:

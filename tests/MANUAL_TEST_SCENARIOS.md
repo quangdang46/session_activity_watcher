@@ -8,7 +8,7 @@ Run them in a disposable session: several scenarios intentionally stop or kill t
 From the repo root:
 
 ```bash
-cargo build --bin saw
+cargo build -p saw --bin saw
 mkdir -p tmp/manual
 ```
 
@@ -20,7 +20,7 @@ Use two terminals:
 A streaming monitor is the easiest way to catch transient phases:
 
 ```bash
-cargo run -- watch --dir "$PWD" --timeout-secs 120 --robot --no-color | tee /tmp/saw-watch.jsonl
+cargo run -p saw -- watch --dir "$PWD" --timeout-secs 120 --robot --no-color | tee /tmp/saw-watch.jsonl
 ```
 
 Add `--checkpoint` when you want every stuck alert to save a recovery snapshot before the configured action runs.
@@ -66,7 +66,7 @@ Goal: pause Claude while it is waiting on a tool result and verify that `saw` re
 3. In Terminal B, start the monitor if it is not already running:
 
    ```bash
-   cargo run -- watch --dir "$PWD" --timeout-secs 120 --robot --no-color | tee /tmp/saw-api-hang.jsonl
+   cargo run -p saw -- watch --dir "$PWD" --timeout-secs 120 --robot --no-color | tee /tmp/saw-api-hang.jsonl
    ```
 
 4. Pause Claude mid-tool-call:
@@ -92,7 +92,7 @@ Goal: pause Claude while it is waiting on a tool result and verify that `saw` re
 
 ```bash
 grep 'API_HANG' /tmp/saw-api-hang.jsonl
-cargo run --quiet -- status --json --dir "$PWD" > /tmp/saw-api-hang-status.json; status=$?; cat /tmp/saw-api-hang-status.json; echo "exit=$status"
+cargo run -p saw --quiet -- status --json --dir "$PWD" > /tmp/saw-api-hang-status.json; status=$?; cat /tmp/saw-api-hang-status.json; echo "exit=$status"
 python3 - <<'PY'
 import json
 from pathlib import Path
@@ -112,7 +112,7 @@ Goal: repeatedly rewrite the same file and verify that `saw` reports `TOOL_LOOP`
 1. In Terminal B, start the monitor:
 
    ```bash
-   cargo run -- watch --dir "$PWD" --timeout-secs 120 --robot --no-color | tee /tmp/saw-tool-loop.jsonl
+   cargo run -p saw -- watch --dir "$PWD" --timeout-secs 120 --robot --no-color | tee /tmp/saw-tool-loop.jsonl
    ```
 
 2. Start a tight rewrite loop in another shell:
@@ -151,7 +151,7 @@ Goal: repeatedly rewrite the same file and verify that `saw` reports `TOOL_LOOP`
 
 ```bash
 grep 'TOOL_LOOP' /tmp/saw-tool-loop.jsonl
-cargo run --quiet -- status --json --dir "$PWD" > /tmp/saw-tool-loop-status.json; status=$?; cat /tmp/saw-tool-loop-status.json; echo "exit=$status"
+cargo run -p saw --quiet -- status --json --dir "$PWD" > /tmp/saw-tool-loop-status.json; status=$?; cat /tmp/saw-tool-loop-status.json; echo "exit=$status"
 ```
 
 ### Current limitation
@@ -175,7 +175,7 @@ Goal: keep `saw` guarded to one subtree, then make Claude write outside that gua
 2. In Terminal B, start a guarded monitor:
 
    ```bash
-   cargo run -- watch --dir "$PWD" --guard src/auth --robot --no-color | tee /tmp/saw-scope-leak.jsonl
+   cargo run -p saw -- watch --dir "$PWD" --guard src/auth --robot --no-color | tee /tmp/saw-scope-leak.jsonl
    ```
 
 3. In Terminal A, ask Claude to create or edit a file outside the guard, for example `src/billing/leak.rs`.
@@ -191,7 +191,7 @@ Goal: keep `saw` guarded to one subtree, then make Claude write outside that gua
 
 ```bash
 grep 'SCOPE_LEAKING' /tmp/saw-scope-leak.jsonl
-cargo run --quiet -- status --json --dir "$PWD" --guard src/auth > /tmp/saw-scope-leak-status.json; status=$?; cat /tmp/saw-scope-leak-status.json; echo "exit=$status"
+cargo run -p saw --quiet -- status --json --dir "$PWD" --guard src/auth > /tmp/saw-scope-leak-status.json; status=$?; cat /tmp/saw-scope-leak-status.json; echo "exit=$status"
 python3 - <<'PY'
 import json
 from pathlib import Path
@@ -212,7 +212,7 @@ Goal: run a long enough Claude session to trigger compaction and verify that `sa
 1. In Terminal B, start a robot monitor:
 
    ```bash
-   cargo run -- watch --dir "$PWD" --timeout-secs 120 --robot --no-color | tee /tmp/saw-context-reset.jsonl
+   cargo run -p saw -- watch --dir "$PWD" --timeout-secs 120 --robot --no-color | tee /tmp/saw-context-reset.jsonl
    ```
 
 2. In Terminal A, keep the session running until Claude compacts. The easiest way is a long conversation with enough file reads/edits to force context compaction.
@@ -244,7 +244,7 @@ Goal: kill Claude mid-session and verify that `saw` reports `DEAD`.
 2. In Terminal B, start the monitor:
 
    ```bash
-   cargo run -- watch --dir "$PWD" --timeout-secs 120 --robot --no-color | tee /tmp/saw-dead.jsonl
+   cargo run -p saw -- watch --dir "$PWD" --timeout-secs 120 --robot --no-color | tee /tmp/saw-dead.jsonl
    ```
 
 3. Kill Claude mid-session:
@@ -265,7 +265,7 @@ Goal: kill Claude mid-session and verify that `saw` reports `DEAD`.
 
 ```bash
 grep 'DEAD' /tmp/saw-dead.jsonl || true
-cargo run --quiet -- status --json --dir "$PWD" > /tmp/saw-dead-status.json; status=$?; cat /tmp/saw-dead-status.json; echo "exit=$status"
+cargo run -p saw --quiet -- status --json --dir "$PWD" > /tmp/saw-dead-status.json; status=$?; cat /tmp/saw-dead-status.json; echo "exit=$status"
 python3 - <<'PY'
 import json
 from pathlib import Path
