@@ -637,6 +637,7 @@ pub fn find_claude_session(home: &Path, cwd: Option<&Path>) -> Result<(u32, Sess
         })
 }
 
+#[cfg(test)]
 pub fn choose_session(
     sessions: &[(u32, SessionFile)],
     cwd: Option<&Path>,

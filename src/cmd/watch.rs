@@ -26,19 +26,14 @@ use std::time::Duration;
 use tokio::runtime::Builder;
 use tokio::sync::mpsc;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum, Serialize, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
 pub enum StuckAction {
+    #[default]
     Warn,
     Bell,
     Kill,
     CheckpointKill,
-}
-
-impl Default for StuckAction {
-    fn default() -> Self {
-        Self::Warn
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum, Serialize, Deserialize)]
@@ -845,10 +840,10 @@ mod tests {
         assert_eq!(payload["pid"], Value::Number(4242.into()));
         assert_eq!(payload["file"], Value::String("src/lib.rs".into()));
         assert!(payload["timestamp"].as_str().unwrap().ends_with('Z'));
-        assert!(payload["suggestion"]
-            .as_str()
-            .unwrap()
-            .contains("--on-stuck kill/--checkpoint"));
+        assert_eq!(
+            payload["suggestion"],
+            Value::String("send a follow-up or use --on-stuck kill if it stays blocked".into())
+        );
     }
 
     #[test]

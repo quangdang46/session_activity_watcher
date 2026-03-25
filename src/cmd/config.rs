@@ -25,19 +25,10 @@ pub struct ConfigArgs {
     pub reset: bool,
 }
 
-#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, PartialEq, Eq, Default)]
 pub struct SawConfig {
     pub timeout: TimeoutSetting,
     pub on_stuck: StuckAction,
-}
-
-impl Default for SawConfig {
-    fn default() -> Self {
-        Self {
-            timeout: TimeoutSetting::default(),
-            on_stuck: StuckAction::default(),
-        }
-    }
 }
 
 impl<'de> Deserialize<'de> for SawConfig {
@@ -249,9 +240,9 @@ fn parse_duration_secs(value: &str) -> std::result::Result<u64, String> {
 }
 
 fn format_duration_secs(secs: u64) -> String {
-    if secs != 0 && secs % (60 * 60) == 0 {
+    if secs != 0 && secs.is_multiple_of(60 * 60) {
         format!("{}h", secs / (60 * 60))
-    } else if secs != 0 && secs % 60 == 0 {
+    } else if secs != 0 && secs.is_multiple_of(60) {
         format!("{}m", secs / 60)
     } else {
         format!("{secs}s")
