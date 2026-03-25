@@ -22,6 +22,18 @@ The demo shows `saw watch` catching a stuck Claude session and surfacing the ale
 
 ## Install
 
+### curl | bash
+
+```bash
+curl -fsSL "https://raw.githubusercontent.com/quangdang46/session_activity_watcher/main/install.sh?$(date +%s)" | bash
+```
+
+The installer picks the matching release asset for Linux x86_64/aarch64, macOS x86_64/aarch64, or Windows x86_64. If a prebuilt archive is unavailable, it falls back to a source build.
+
+Pass installer flags after `bash -s --`, for example `--verify`, `--system`, `--version v0.1.0`, `--from-source`, `--dest "$HOME/bin" --easy-mode`, or `--uninstall`.
+
+By default the installer writes to `~/.local/bin`. Use `--system` for `/usr/local/bin`, `--dest` for a custom location, or `--easy-mode` to append the install dir to `~/.bashrc` and `~/.zshrc`.
+
 ### Cargo
 
 #### Install from GitHub
@@ -37,24 +49,6 @@ git clone https://github.com/quangdang46/session_activity_watcher.git
 cd session_activity_watcher
 cargo install --path crates/saw-cli --locked
 ```
-
-### curl | bash
-
-```bash
-curl -fsSL "https://raw.githubusercontent.com/quangdang46/session_activity_watcher/main/install.sh?$(date +%s)" | bash
-```
-
-The installer picks the matching release asset for Linux x86_64/aarch64, macOS x86_64/aarch64, or Windows x86_64. If a prebuilt archive is unavailable, it falls back to a source build.
-
-Useful variants:
-
-```bash
-curl -fsSL "https://raw.githubusercontent.com/quangdang46/session_activity_watcher/main/install.sh?$(date +%s)" | bash -s -- --verify
-```
-
-Pass installer flags after `bash -s --`, for example `--system`, `--version v0.1.0`, `--from-source`, `--dest "$HOME/bin" --easy-mode`, or `--uninstall`.
-
-By default the installer writes to `~/.local/bin`. Use `--system` for `/usr/local/bin`, `--dest` for a custom location, or `--easy-mode` to append the install dir to `~/.bashrc` and `~/.zshrc`.
 
 ### Build manually
 
