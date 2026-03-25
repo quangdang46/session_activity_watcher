@@ -1,0 +1,46 @@
+{"ts":"2026-03-25T00:25:31.741389328Z","kind":"session_started","session_id":"ses-run-saw-1rb-20260325T002531664"}
+{"ts":"2026-03-25T00:34:52.976700294Z","kind":"stdout","line":"GROVE_RESULT: success"}
+{"ts":"2026-03-25T00:34:52.976700294Z","kind":"protocol","event":{"type":"result","summary":"success"}}
+{"ts":"2026-03-25T00:34:53.021259232Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T00:34:53.021276991Z","kind":"stdout","line":"GROVE_ARTIFACTS:"}
+{"ts":"2026-03-25T00:34:53.021276991Z","kind":"protocol","event":{"type":"artifacts","items":[]}}
+{"ts":"2026-03-25T00:34:53.021937711Z","kind":"stdout","line":"- `install.sh:17` added explicit lock ownership tracking so cleanup only removes the lock this installer instance created."}
+{"ts":"2026-03-25T00:34:53.021937711Z","kind":"protocol","event":{"type":"artifacts","items":["`install.sh:17` added explicit lock ownership tracking so cleanup only removes the lock this installer instance created."]}}
+{"ts":"2026-03-25T00:34:53.021947266Z","kind":"stdout","line":"- `src/main.rs:7` enabled Clap version output so `saw --version` works with the installer’s `--verify` path."}
+{"ts":"2026-03-25T00:34:53.021947266Z","kind":"protocol","event":{"type":"artifacts","items":["`src/main.rs:7` enabled Clap version output so `saw --version` works with the installer’s `--verify` path."]}}
+{"ts":"2026-03-25T00:34:53.021953081Z","kind":"stdout","line":"- `README.md:22` already matched the required curl installer pattern and includes the release tag command."}
+{"ts":"2026-03-25T00:34:53.021953081Z","kind":"protocol","event":{"type":"artifacts","items":["`README.md:22` already matched the required curl installer pattern and includes the release tag command."]}}
+{"ts":"2026-03-25T00:34:53.021960247Z","kind":"stdout","line":"- `.github/workflows/ci.yml:1` and `.github/workflows/release.yml:1` were already aligned with the release/distribution scaffold."}
+{"ts":"2026-03-25T00:34:53.021960247Z","kind":"protocol","event":{"type":"artifacts","items":["`.github/workflows/ci.yml:1` and `.github/workflows/release.yml:1` were already aligned with the release/distribution scaffold."]}}
+{"ts":"2026-03-25T00:34:53.021965129Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T00:34:53.021967621Z","kind":"stdout","line":"GROVE_LESSONS:"}
+{"ts":"2026-03-25T00:34:53.021967621Z","kind":"protocol","event":{"type":"lessons","items":[]}}
+{"ts":"2026-03-25T00:34:53.021973021Z","kind":"stdout","line":"- The concrete verification path exposed the actual failure mode quickly: installer verification assumed `saw --version`, but the CLI had no top-level version flag."}
+{"ts":"2026-03-25T00:34:53.021973021Z","kind":"protocol","event":{"type":"lessons","items":["The concrete verification path exposed the actual failure mode quickly: installer verification assumed `saw --version`, but the CLI had no top-level version flag."]}}
+{"ts":"2026-03-25T00:34:53.021978630Z","kind":"stdout","line":"- Repo-wide validation was blocked first by formatting drift, so running `cargo fmt --all` before the full CI sequence was the right recovery path."}
+{"ts":"2026-03-25T00:34:53.021978630Z","kind":"protocol","event":{"type":"lessons","items":["Repo-wide validation was blocked first by formatting drift, so running `cargo fmt --all` before the full CI sequence was the right recovery path."]}}
+{"ts":"2026-03-25T00:34:53.022010409Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T00:34:53.022014252Z","kind":"stdout","line":"GROVE_DECISIONS:"}
+{"ts":"2026-03-25T00:34:53.022014252Z","kind":"protocol","event":{"type":"decision","items":[]}}
+{"ts":"2026-03-25T00:34:53.022020067Z","kind":"stdout","line":"- Kept the existing CI, release workflow, installer structure, and README install instructions because they already satisfied the release skill contract."}
+{"ts":"2026-03-25T00:34:53.022020067Z","kind":"protocol","event":{"type":"decision","items":["Kept the existing CI, release workflow, installer structure, and README install instructions because they already satisfied the release skill contract."]}}
+{"ts":"2026-03-25T00:34:53.022026195Z","kind":"stdout","line":"- Fixed only the release-path gaps needed for successful verification instead of rewriting already-correct scaffold files."}
+{"ts":"2026-03-25T00:34:53.022026195Z","kind":"protocol","event":{"type":"decision","items":["Fixed only the release-path gaps needed for successful verification instead of rewriting already-correct scaffold files."]}}
+{"ts":"2026-03-25T00:34:53.022039592Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T00:34:53.022041357Z","kind":"stdout","line":"GROVE_WARNINGS:"}
+{"ts":"2026-03-25T00:34:53.022041357Z","kind":"protocol","event":{"type":"warning","items":[]}}
+{"ts":"2026-03-25T00:34:53.022044681Z","kind":"stdout","line":"- `cargo fmt --all` reformatted a few existing Rust files outside the release-specific edits."}
+{"ts":"2026-03-25T00:34:53.022044681Z","kind":"protocol","event":{"type":"warning","items":["`cargo fmt --all` reformatted a few existing Rust files outside the release-specific edits."]}}
+{"ts":"2026-03-25T00:34:53.022048627Z","kind":"stdout","line":"- HN/Reddit launch posting was not performed; the repo now contains launch copy/checklist only."}
+{"ts":"2026-03-25T00:34:53.022048627Z","kind":"protocol","event":{"type":"warning","items":["HN/Reddit launch posting was not performed; the repo now contains launch copy/checklist only."]}}
+{"ts":"2026-03-25T00:34:53.022051639Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T00:34:53.022053508Z","kind":"stdout","line":"Verified:"}
+{"ts":"2026-03-25T00:34:53.022055274Z","kind":"stdout","line":"- `bash install.sh --help`"}
+{"ts":"2026-03-25T00:34:53.022056936Z","kind":"stdout","line":"- `cargo run --quiet -- --version`"}
+{"ts":"2026-03-25T00:34:53.022058597Z","kind":"stdout","line":"- `cargo fmt --all -- --check`"}
+{"ts":"2026-03-25T00:34:53.022060259Z","kind":"stdout","line":"- `cargo clippy --workspace --all-targets --all-features -- -D warnings`"}
+{"ts":"2026-03-25T00:34:53.022083003Z","kind":"stdout","line":"- `cargo test --workspace --all-features`"}
+{"ts":"2026-03-25T00:34:53.022085599Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T00:34:53.022087573Z","kind":"stdout","line":"GROVE_EXIT: true"}
+{"ts":"2026-03-25T00:34:53.022087573Z","kind":"protocol","event":{"type":"exit","value":true}}
+{"ts":"2026-03-25T00:34:53.520962230Z","kind":"session_ended","exit_code":0}

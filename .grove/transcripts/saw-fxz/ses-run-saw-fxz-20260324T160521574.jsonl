@@ -1,0 +1,54 @@
+{"ts":"2026-03-24T16:05:21.597328021Z","kind":"session_started","session_id":"ses-run-saw-fxz-20260324T160521574"}
+{"ts":"2026-03-24T16:47:20.105660904Z","kind":"stdout","line":"GROVE_RESULT: success - implemented Dead UI detection with 5-minute inactivity threshold, distinct from ApiHang"}
+{"ts":"2026-03-24T16:47:20.105660904Z","kind":"protocol","event":{"type":"result","summary":"success - implemented Dead UI detection with 5-minute inactivity threshold, distinct from ApiHang"}}
+{"ts":"2026-03-24T16:47:20.137682695Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T16:47:20.137714394Z","kind":"stdout","line":"GROVE_ARTIFACTS:"}
+{"ts":"2026-03-24T16:47:20.137714394Z","kind":"protocol","event":{"type":"artifacts","items":[]}}
+{"ts":"2026-03-24T16:47:20.138009200Z","kind":"stdout","line":"- Added `dead_after` classifier threshold and Dead-state logic in `crates/saw-core/src/classifier.rs:12`, `crates/saw-core/src/classifier.rs:110`"}
+{"ts":"2026-03-24T16:47:20.138009200Z","kind":"protocol","event":{"type":"artifacts","items":["Added `dead_after` classifier threshold and Dead-state logic in `crates/saw-core/src/classifier.rs:12`, `crates/saw-core/src/classifier.rs:110`"]}}
+{"ts":"2026-03-24T16:47:20.138018301Z","kind":"stdout","line":"- Dead now requires `silence > 300s`, `cpu < 0.5%`, stale JSONL, frozen tokens, and flat memory; process exit still maps to `Dead` in `crates/saw-core/src/classifier.rs:111`"}
+{"ts":"2026-03-24T16:47:20.138018301Z","kind":"protocol","event":{"type":"artifacts","items":["Dead now requires `silence > 300s`, `cpu < 0.5%`, stale JSONL, frozen tokens, and flat memory; process exit still maps to `Dead` in `crates/saw-core/src/classifier.rs:111`"]}}
+{"ts":"2026-03-24T16:47:20.138024539Z","kind":"stdout","line":"- Added `last_memory_activity_at` tracking from process metrics in `crates/saw-core/src/types.rs:275`, `crates/saw-core/src/types.rs:817`"}
+{"ts":"2026-03-24T16:47:20.138024539Z","kind":"protocol","event":{"type":"artifacts","items":["Added `last_memory_activity_at` tracking from process metrics in `crates/saw-core/src/types.rs:275`, `crates/saw-core/src/types.rs:817`"]}}
+{"ts":"2026-03-24T16:47:20.138031288Z","kind":"stdout","line":"- Updated watch output to recommend `hard kill and restart the session` and include Dead details in `src/cmd/watch.rs:321`, `src/cmd/watch.rs:381`, `src/cmd/watch.rs:476`"}
+{"ts":"2026-03-24T16:47:20.138031288Z","kind":"protocol","event":{"type":"artifacts","items":["Updated watch output to recommend `hard kill and restart the session` and include Dead details in `src/cmd/watch.rs:321`, `src/cmd/watch.rs:381`, `src/cmd/watch.rs:476`"]}}
+{"ts":"2026-03-24T16:47:20.138035787Z","kind":"stdout","line":"- Updated TUI alert text for Dead UI in `src/cmd/tui.rs:563`"}
+{"ts":"2026-03-24T16:47:20.138035787Z","kind":"protocol","event":{"type":"artifacts","items":["Updated TUI alert text for Dead UI in `src/cmd/tui.rs:563`"]}}
+{"ts":"2026-03-24T16:47:20.138041411Z","kind":"stdout","line":"- Added unit coverage for Dead vs ApiHang thresholds in `crates/saw-core/src/classifier.rs:411`, `crates/saw-core/src/classifier.rs:425`, `crates/saw-core/src/classifier.rs:439`, `crates/saw-core/src/classifier.rs:489`"}
+{"ts":"2026-03-24T16:47:20.138041411Z","kind":"protocol","event":{"type":"artifacts","items":["Added unit coverage for Dead vs ApiHang thresholds in `crates/saw-core/src/classifier.rs:411`, `crates/saw-core/src/classifier.rs:425`, `crates/saw-core/src/classifier.rs:439`, `crates/saw-core/src/classifier.rs:489`"]}}
+{"ts":"2026-03-24T16:47:20.138046013Z","kind":"stdout","line":"- Added watch payload test for stale Dead signals in `src/cmd/watch.rs:775`"}
+{"ts":"2026-03-24T16:47:20.138046013Z","kind":"protocol","event":{"type":"artifacts","items":["Added watch payload test for stale Dead signals in `src/cmd/watch.rs:775`"]}}
+{"ts":"2026-03-24T16:47:20.138050410Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T16:47:20.138052660Z","kind":"stdout","line":"GROVE_LESSONS:"}
+{"ts":"2026-03-24T16:47:20.138052660Z","kind":"protocol","event":{"type":"lessons","items":[]}}
+{"ts":"2026-03-24T16:47:20.138057057Z","kind":"stdout","line":"- The repo already used `Dead` for process death, so the safest path was to extend that variant to also cover Dead UI rather than introducing a second severe state."}
+{"ts":"2026-03-24T16:47:20.138057057Z","kind":"protocol","event":{"type":"lessons","items":["The repo already used `Dead` for process death, so the safest path was to extend that variant to also cover Dead UI rather than introducing a second severe state."]}}
+{"ts":"2026-03-24T16:47:20.138069736Z","kind":"stdout","line":"- Tracking “memory flat” needed one extra timestamp in state; comparing successive RSS/virtual samples was enough without changing persisted payload formats."}
+{"ts":"2026-03-24T16:47:20.138069736Z","kind":"protocol","event":{"type":"lessons","items":["Tracking “memory flat” needed one extra timestamp in state; comparing successive RSS/virtual samples was enough without changing persisted payload formats."]}}
+{"ts":"2026-03-24T16:47:20.138072497Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T16:47:20.138073827Z","kind":"stdout","line":"GROVE_DECISIONS:"}
+{"ts":"2026-03-24T16:47:20.138073827Z","kind":"protocol","event":{"type":"decision","items":[]}}
+{"ts":"2026-03-24T16:47:20.138087529Z","kind":"stdout","line":"- Kept `AgentPhase::Dead` as the acceptance-criteria variant and broadened its semantics to mean “UI unresponsive or process gone.”"}
+{"ts":"2026-03-24T16:47:20.138087529Z","kind":"protocol","event":{"type":"decision","items":["Kept `AgentPhase::Dead` as the acceptance-criteria variant and broadened its semantics to mean “UI unresponsive or process gone.”"]}}
+{"ts":"2026-03-24T16:47:20.138376609Z","kind":"stdout","line":"- Dead stays higher priority than ApiHang, but only triggers after a stricter 300s threshold with CPU, token, JSONL, and memory-flat gating."}
+{"ts":"2026-03-24T16:47:20.138376609Z","kind":"protocol","event":{"type":"decision","items":["Dead stays higher priority than ApiHang, but only triggers after a stricter 300s threshold with CPU, token, JSONL, and memory-flat gating."]}}
+{"ts":"2026-03-24T16:47:20.138380290Z","kind":"stdout","line":"- ApiHang remains the 120s waiting-on-tool condition; Dead is intentionally not gated on `awaiting_tool_result` so it can catch UI wedged states."}
+{"ts":"2026-03-24T16:47:20.138380290Z","kind":"protocol","event":{"type":"decision","items":["ApiHang remains the 120s waiting-on-tool condition; Dead is intentionally not gated on `awaiting_tool_result` so it can catch UI wedged states."]}}
+{"ts":"2026-03-24T16:47:20.138383255Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T16:47:20.138384585Z","kind":"stdout","line":"GROVE_WARNINGS:"}
+{"ts":"2026-03-24T16:47:20.138384585Z","kind":"protocol","event":{"type":"warning","items":[]}}
+{"ts":"2026-03-24T16:47:20.138388062Z","kind":"stdout","line":"- `cargo test --bin saw ...` reports a pre-existing warning: `find_session_jsonl` is unused in `src/cmd/common.rs:300`. It does not block tests."}
+{"ts":"2026-03-24T16:47:20.138388062Z","kind":"protocol","event":{"type":"warning","items":["`cargo test --bin saw ...` reports a pre-existing warning: `find_session_jsonl` is unused in `src/cmd/common.rs:300`. It does not block tests."]}}
+{"ts":"2026-03-24T16:47:20.138391027Z","kind":"stdout","line":"- There is existing in-progress repo churn outside this task; I only touched the files required for Dead detection."}
+{"ts":"2026-03-24T16:47:20.138391027Z","kind":"protocol","event":{"type":"warning","items":["There is existing in-progress repo churn outside this task; I only touched the files required for Dead detection."]}}
+{"ts":"2026-03-24T16:47:20.138394095Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T16:47:20.138395629Z","kind":"stdout","line":"Tests run:"}
+{"ts":"2026-03-24T16:47:20.138396958Z","kind":"stdout","line":"- `cargo test -p saw-core classifier_tests -- --nocapture`"}
+{"ts":"2026-03-24T16:47:20.138398287Z","kind":"stdout","line":"- `cargo test -p saw-core classifier::tests -- --nocapture`"}
+{"ts":"2026-03-24T16:47:20.138399514Z","kind":"stdout","line":"- `cargo test -p saw-core types::tests -- --nocapture`"}
+{"ts":"2026-03-24T16:47:20.138406161Z","kind":"stdout","line":"- `cargo test --bin saw cmd::watch::tests -- --nocapture`"}
+{"ts":"2026-03-24T16:47:20.138407593Z","kind":"stdout","line":"- `cargo test --bin saw cmd::tui::tests -- --nocapture`"}
+{"ts":"2026-03-24T16:47:20.138409126Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T16:47:20.138410456Z","kind":"stdout","line":"GROVE_EXIT: true"}
+{"ts":"2026-03-24T16:47:20.138410456Z","kind":"protocol","event":{"type":"exit","value":true}}
+{"ts":"2026-03-24T16:47:20.501032177Z","kind":"session_ended","exit_code":0}

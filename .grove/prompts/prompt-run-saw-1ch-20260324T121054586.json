@@ -1,0 +1,127 @@
+{
+  "prompt_id": "prompt-run-saw-1ch-20260324T121054586",
+  "bead_id": "saw-1ch",
+  "run_id": "run-saw-1ch-20260324T121054586",
+  "session_id": "ses-run-saw-1ch-20260324T121054586",
+  "contract": "RetryRescue",
+  "created_at": "2026-03-24T12:10:54.593370191Z",
+  "token_budget": null,
+  "estimated_tokens": 297,
+  "prompt_bytes": 1188,
+  "trimmed": false,
+  "retry_delta_summary": "Changed retry framing: breaks the previous stuck loop, requires a different verification path, and forbids repeating the same debugging sequence verbatim.",
+  "retrieval_query": "Deliverable OR deliverable OR classifier OR Implement OR completed",
+  "retrieval_ranking_summary": [
+    "Historical snippet (Score: 0.00)"
+  ],
+  "sections": [
+    {
+      "ordinal": 1,
+      "kind": "Contract",
+      "heading": "Execution contract",
+      "included": true,
+      "estimated_tokens": 27,
+      "char_count": 108,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "[EXECUTION CONTRACT]\nRetry the task with a changed approach that avoids repeatin…"
+    },
+    {
+      "ordinal": 2,
+      "kind": "Task",
+      "heading": "Task",
+      "included": true,
+      "estimated_tokens": 80,
+      "char_count": 320,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "[TASK]\nTitle: [EPIC] Phase 1 - Core Signal Pipeline\n\nImplement saw-core types, s…"
+    },
+    {
+      "ordinal": 3,
+      "kind": "ArchiveSnippet",
+      "heading": "Historical snippet (Score: 0.00)",
+      "included": true,
+      "estimated_tokens": 33,
+      "char_count": 129,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": "1",
+        "playbook_bullet_id": null
+      },
+      "preview": "From .grove/transcripts/saw-1ch/ses-run-saw-1ch-20260324T054120045.jsonl\n<b>Impl…"
+    },
+    {
+      "ordinal": 4,
+      "kind": "EscalationContext",
+      "heading": "Escalation context (tier 0)",
+      "included": true,
+      "estimated_tokens": 13,
+      "char_count": 103,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "[ESCALATION CONTEXT]\nTier: FirstAttempt (attempt 0)\nInitial attempt. Proceed nor…"
+    },
+    {
+      "ordinal": 5,
+      "kind": "Protocol",
+      "heading": "Grove protocol",
+      "included": true,
+      "estimated_tokens": 72,
+      "char_count": 286,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "[GROVE PROTOCOL]\nEmit GROVE_RESULT, GROVE_ARTIFACTS, GROVE_LESSONS, GROVE_DECISI…"
+    },
+    {
+      "ordinal": 6,
+      "kind": "RescueCard",
+      "heading": "Rescue card",
+      "included": true,
+      "estimated_tokens": 58,
+      "char_count": 232,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "- Break the prior loop immediately; choose a different inspection or verificatio…"
+    }
+  ]
+}

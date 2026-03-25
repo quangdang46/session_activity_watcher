@@ -1,0 +1,51 @@
+{"ts":"2026-03-24T17:27:01.461588729Z","kind":"session_started","session_id":"ses-run-saw-pe1-20260324T172701456"}
+{"ts":"2026-03-24T17:35:48.877597849Z","kind":"stdout","line":"GROVE_RESULT: success"}
+{"ts":"2026-03-24T17:35:48.877597849Z","kind":"protocol","event":{"type":"result","summary":"success"}}
+{"ts":"2026-03-24T17:35:48.877967342Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T17:35:48.877971859Z","kind":"stdout","line":"GROVE_ARTIFACTS:"}
+{"ts":"2026-03-24T17:35:48.877971859Z","kind":"protocol","event":{"type":"artifacts","items":[]}}
+{"ts":"2026-03-24T17:35:48.877977916Z","kind":"stdout","line":"- Added `tests/e2e/test_checkpoint.sh`"}
+{"ts":"2026-03-24T17:35:48.877977916Z","kind":"protocol","event":{"type":"artifacts","items":["Added `tests/e2e/test_checkpoint.sh`"]}}
+{"ts":"2026-03-24T17:35:48.877983050Z","kind":"stdout","line":"- Verified the script passes locally"}
+{"ts":"2026-03-24T17:35:48.877983050Z","kind":"protocol","event":{"type":"artifacts","items":["Verified the script passes locally"]}}
+{"ts":"2026-03-24T17:35:48.877987156Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T17:35:48.877989107Z","kind":"stdout","line":"GROVE_LESSONS:"}
+{"ts":"2026-03-24T17:35:48.877989107Z","kind":"protocol","event":{"type":"lessons","items":[]}}
+{"ts":"2026-03-24T17:35:48.877994137Z","kind":"stdout","line":"- `saw watch --robot` emits a status JSON before the alert JSON for the same stuck condition, so the test must scan all JSON lines and select the `event == \"alert\"` payload."}
+{"ts":"2026-03-24T17:35:48.877994137Z","kind":"protocol","event":{"type":"lessons","items":["`saw watch --robot` emits a status JSON before the alert JSON for the same stuck condition, so the test must scan all JSON lines and select the `event == \"alert\"` payload."]}}
+{"ts":"2026-03-24T17:35:48.877999065Z","kind":"stdout","line":"- The shell may print a benign `wait_for: No record of process ...` line during cleanup after the child exits; it does not affect the test result."}
+{"ts":"2026-03-24T17:35:48.877999065Z","kind":"protocol","event":{"type":"lessons","items":["The shell may print a benign `wait_for: No record of process ...` line during cleanup after the child exits; it does not affect the test result."]}}
+{"ts":"2026-03-24T17:35:48.878048755Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T17:35:48.878051938Z","kind":"stdout","line":"GROVE_DECISIONS:"}
+{"ts":"2026-03-24T17:35:48.878051938Z","kind":"protocol","event":{"type":"decision","items":[]}}
+{"ts":"2026-03-24T17:35:48.878056866Z","kind":"stdout","line":"- Reused the existing e2e pattern from `tests/e2e/test_api_hang.sh` and `tests/e2e/test_scope_leak.sh`."}
+{"ts":"2026-03-24T17:35:48.878056866Z","kind":"protocol","event":{"type":"decision","items":["Reused the existing e2e pattern from `tests/e2e/test_api_hang.sh` and `tests/e2e/test_scope_leak.sh`."]}}
+{"ts":"2026-03-24T17:35:48.878083764Z","kind":"stdout","line":"- Built a synthetic ApiHang fixture with two `Write` tool-use records so checkpoint contents include multiple modified files and a session JSONL snapshot."}
+{"ts":"2026-03-24T17:35:48.878083764Z","kind":"protocol","event":{"type":"decision","items":["Built a synthetic ApiHang fixture with two `Write` tool-use records so checkpoint contents include multiple modified files and a session JSONL snapshot."]}}
+{"ts":"2026-03-24T17:35:48.878089Z","kind":"stdout","line":"- Verified:"}
+{"ts":"2026-03-24T17:35:48.878089Z","kind":"protocol","event":{"type":"decision","items":["Verified:"]}}
+{"ts":"2026-03-24T17:35:48.878093518Z","kind":"stdout","line":"  - checkpoint directory name matches `YYYYMMDD-HHMMSS`"}
+{"ts":"2026-03-24T17:35:48.878093518Z","kind":"protocol","event":{"type":"decision","items":["checkpoint directory name matches `YYYYMMDD-HHMMSS`"]}}
+{"ts":"2026-03-24T17:35:48.878098035Z","kind":"stdout","line":"  - checkpoint lives under `.saw/checkpoints/`"}
+{"ts":"2026-03-24T17:35:48.878098035Z","kind":"protocol","event":{"type":"decision","items":["checkpoint lives under `.saw/checkpoints/`"]}}
+{"ts":"2026-03-24T17:35:48.878102141Z","kind":"stdout","line":"  - copied files exist and byte-match source files"}
+{"ts":"2026-03-24T17:35:48.878102141Z","kind":"protocol","event":{"type":"decision","items":["copied files exist and byte-match source files"]}}
+{"ts":"2026-03-24T17:35:48.878117028Z","kind":"stdout","line":"  - `manifest.json` and `saw-state.json` exist"}
+{"ts":"2026-03-24T17:35:48.878117028Z","kind":"protocol","event":{"type":"decision","items":["`manifest.json` and `saw-state.json` exist"]}}
+{"ts":"2026-03-24T17:35:48.878119595Z","kind":"stdout","line":"  - `manifest.json` contains the expected file list and recent timestamp"}
+{"ts":"2026-03-24T17:35:48.878119595Z","kind":"protocol","event":{"type":"decision","items":["`manifest.json` contains the expected file list and recent timestamp"]}}
+{"ts":"2026-03-24T17:35:48.878122367Z","kind":"stdout","line":"  - `session-snapshot.jsonl` matches the source JSONL"}
+{"ts":"2026-03-24T17:35:48.878122367Z","kind":"protocol","event":{"type":"decision","items":["`session-snapshot.jsonl` matches the source JSONL"]}}
+{"ts":"2026-03-24T17:35:48.878125446Z","kind":"stdout","line":"  - `saw-state.json` includes the expected `recently_modified_files` and `session_jsonl_path`"}
+{"ts":"2026-03-24T17:35:48.878125446Z","kind":"protocol","event":{"type":"decision","items":["`saw-state.json` includes the expected `recently_modified_files` and `session_jsonl_path`"]}}
+{"ts":"2026-03-24T17:35:48.878128013Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T17:35:48.878129348Z","kind":"stdout","line":"GROVE_WARNINGS:"}
+{"ts":"2026-03-24T17:35:48.878129348Z","kind":"protocol","event":{"type":"warning","items":[]}}
+{"ts":"2026-03-24T17:35:48.878132222Z","kind":"stdout","line":"- Running the test currently prints an existing compiler warning about `find_session_jsonl` being unused in `src/cmd/common.rs:300`."}
+{"ts":"2026-03-24T17:35:48.878132222Z","kind":"protocol","event":{"type":"warning","items":["Running the test currently prints an existing compiler warning about `find_session_jsonl` being unused in `src/cmd/common.rs:300`."]}}
+{"ts":"2026-03-24T17:35:48.878135200Z","kind":"stdout","line":"- The test also prints a benign shell cleanup message: `wait_for: No record of process ...`."}
+{"ts":"2026-03-24T17:35:48.878135200Z","kind":"protocol","event":{"type":"warning","items":["The test also prints a benign shell cleanup message: `wait_for: No record of process ...`."]}}
+{"ts":"2026-03-24T17:35:48.878137972Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T17:35:48.878139512Z","kind":"stdout","line":"GROVE_EXIT: true"}
+{"ts":"2026-03-24T17:35:48.878139512Z","kind":"protocol","event":{"type":"exit","value":true}}
+{"ts":"2026-03-24T17:35:49.220787841Z","kind":"session_ended","exit_code":0}

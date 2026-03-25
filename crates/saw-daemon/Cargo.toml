@@ -1,0 +1,18 @@
+[package]
+name = "saw-daemon"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+chrono = "0.4"
+log = "0.4"
+notify = "6"
+rusqlite = { version = "0.32", features = ["bundled"] }
+serde_json = "1"
+saw-core = { path = "../saw-core" }
+sysinfo = "0.38"
+tokio = { version = "1", features = ["fs", "io-util", "macros", "sync", "time"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "time"] }

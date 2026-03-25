@@ -1,0 +1,50 @@
+{"ts":"2026-03-24T15:16:35.403829467Z","kind":"session_started","session_id":"ses-run-saw-2cf-20260324T151635364"}
+{"ts":"2026-03-24T15:26:51.074237352Z","kind":"stdout","line":"GROVE_RESULT: success"}
+{"ts":"2026-03-24T15:26:51.074237352Z","kind":"protocol","event":{"type":"result","summary":"success"}}
+{"ts":"2026-03-24T15:26:51.100920847Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:26:51.100944710Z","kind":"stdout","line":"Added JSONL tail integration coverage in `tests/integration/jsonl_tail.rs:1` and registered it in `Cargo.toml:21`."}
+{"ts":"2026-03-24T15:26:51.101248420Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:26:51.101251771Z","kind":"stdout","line":"GROVE_ARTIFACTS:"}
+{"ts":"2026-03-24T15:26:51.101251771Z","kind":"protocol","event":{"type":"artifacts","items":[]}}
+{"ts":"2026-03-24T15:26:51.101260808Z","kind":"stdout","line":"- `Cargo.toml:21` — added `dev-dependencies` for `saw-daemon` and `tokio`, plus `[[test]]` entry for `jsonl_tail`"}
+{"ts":"2026-03-24T15:26:51.101260808Z","kind":"protocol","event":{"type":"artifacts","items":["`Cargo.toml:21` — added `dev-dependencies` for `saw-daemon` and `tokio`, plus `[[test]]` entry for `jsonl_tail`"]}}
+{"ts":"2026-03-24T15:26:51.101267612Z","kind":"stdout","line":"- `tests/integration/jsonl_tail.rs:1` — new integration tests covering:"}
+{"ts":"2026-03-24T15:26:51.101267612Z","kind":"protocol","event":{"type":"artifacts","items":["`tests/integration/jsonl_tail.rs:1` — new integration tests covering:"]}}
+{"ts":"2026-03-24T15:26:51.101295942Z","kind":"stdout","line":"  - mixed assistant/user event emission"}
+{"ts":"2026-03-24T15:26:51.101295942Z","kind":"protocol","event":{"type":"artifacts","items":["mixed assistant/user event emission"]}}
+{"ts":"2026-03-24T15:26:51.101305588Z","kind":"stdout","line":"  - partial line buffering until newline"}
+{"ts":"2026-03-24T15:26:51.101305588Z","kind":"protocol","event":{"type":"artifacts","items":["partial line buffering until newline"]}}
+{"ts":"2026-03-24T15:26:51.101310767Z","kind":"stdout","line":"  - file rotation to newest JSONL without event loss"}
+{"ts":"2026-03-24T15:26:51.101310767Z","kind":"protocol","event":{"type":"artifacts","items":["file rotation to newest JSONL without event loss"]}}
+{"ts":"2026-03-24T15:26:51.101316453Z","kind":"stdout","line":"  - large batch processing with 1200 records"}
+{"ts":"2026-03-24T15:26:51.101316453Z","kind":"protocol","event":{"type":"artifacts","items":["large batch processing with 1200 records"]}}
+{"ts":"2026-03-24T15:26:51.101321226Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:26:51.101323764Z","kind":"stdout","line":"GROVE_LESSONS:"}
+{"ts":"2026-03-24T15:26:51.101323764Z","kind":"protocol","event":{"type":"lessons","items":[]}}
+{"ts":"2026-03-24T15:26:51.101329958Z","kind":"stdout","line":"- Root integration tests needed an explicit `[[test]]` target because the requested file lives under `tests/integration/jsonl_tail.rs` instead of Cargo’s default `tests/*.rs`."}
+{"ts":"2026-03-24T15:26:51.101329958Z","kind":"protocol","event":{"type":"lessons","items":["Root integration tests needed an explicit `[[test]]` target because the requested file lives under `tests/integration/jsonl_tail.rs` instead of Cargo’s default `tests/*.rs`."]}}
+{"ts":"2026-03-24T15:26:51.101359202Z","kind":"stdout","line":"- `ToolResult.stderr` is `None` when the JSON omits the field, so fixtures should omit empty stderr rather than serialize `\\\"stderr\\\":\\\"\\\"`."}
+{"ts":"2026-03-24T15:26:51.101359202Z","kind":"protocol","event":{"type":"lessons","items":["`ToolResult.stderr` is `None` when the JSON omits the field, so fixtures should omit empty stderr rather than serialize `\\\"stderr\\\":\\\"\\\"`."]}}
+{"ts":"2026-03-24T15:26:51.101366005Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:26:51.101369255Z","kind":"stdout","line":"GROVE_DECISIONS:"}
+{"ts":"2026-03-24T15:26:51.101369255Z","kind":"protocol","event":{"type":"decision","items":[]}}
+{"ts":"2026-03-24T15:26:51.101374840Z","kind":"stdout","line":"- Kept tests external to the crate as requested instead of extending `crates/saw-daemon/src/jsonl_tail.rs:292`."}
+{"ts":"2026-03-24T15:26:51.101374840Z","kind":"protocol","event":{"type":"decision","items":["Kept tests external to the crate as requested instead of extending `crates/saw-daemon/src/jsonl_tail.rs:292`."]}}
+{"ts":"2026-03-24T15:26:51.101394031Z","kind":"stdout","line":"- Used temp directories and real file appends with a live `JsonlTailer` task to exercise actual file reads and notify/poll behavior."}
+{"ts":"2026-03-24T15:26:51.101394031Z","kind":"protocol","event":{"type":"decision","items":["Used temp directories and real file appends with a live `JsonlTailer` task to exercise actual file reads and notify/poll behavior."]}}
+{"ts":"2026-03-24T15:26:51.101419721Z","kind":"stdout","line":"- Verified large-file behavior by asserting all 1200 emitted events are received, which checks streaming correctness without introducing memory instrumentation."}
+{"ts":"2026-03-24T15:26:51.101419721Z","kind":"protocol","event":{"type":"decision","items":["Verified large-file behavior by asserting all 1200 emitted events are received, which checks streaming correctness without introducing memory instrumentation."]}}
+{"ts":"2026-03-24T15:26:51.101424900Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:26:51.101426626Z","kind":"stdout","line":"GROVE_WARNINGS:"}
+{"ts":"2026-03-24T15:26:51.101426626Z","kind":"protocol","event":{"type":"warning","items":[]}}
+{"ts":"2026-03-24T15:26:51.101430281Z","kind":"stdout","line":"- The acceptance criteria requested `1000+` records; the test uses 1200."}
+{"ts":"2026-03-24T15:26:51.101430281Z","kind":"protocol","event":{"type":"warning","items":["The acceptance criteria requested `1000+` records; the test uses 1200."]}}
+{"ts":"2026-03-24T15:26:51.101434952Z","kind":"stdout","line":"- These tests validate observable behavior, not internal memory allocations, so “without memory issues” is covered indirectly via successful large-batch processing."}
+{"ts":"2026-03-24T15:26:51.101434952Z","kind":"protocol","event":{"type":"warning","items":["These tests validate observable behavior, not internal memory allocations, so “without memory issues” is covered indirectly via successful large-batch processing."]}}
+{"ts":"2026-03-24T15:26:51.101438506Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:26:51.101440029Z","kind":"stdout","line":"Tests run:"}
+{"ts":"2026-03-24T15:26:51.101441755Z","kind":"stdout","line":"- `cargo test --test jsonl_tail`"}
+{"ts":"2026-03-24T15:26:51.101443685Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:26:51.101445411Z","kind":"stdout","line":"GROVE_EXIT: true"}
+{"ts":"2026-03-24T15:26:51.101445411Z","kind":"protocol","event":{"type":"exit","value":true}}
+{"ts":"2026-03-24T15:26:51.575642225Z","kind":"session_ended","exit_code":0}

@@ -1,0 +1,17 @@
+{"ts":"2026-03-24T15:50:28.075369391Z","kind":"session_started","session_id":"ses-run-saw-6f2-20260324T155028038"}
+{"ts":"2026-03-24T17:22:26.828545812Z","kind":"stdout","line":"The output file shows that background run failed with exit code 1."}
+{"ts":"2026-03-24T17:22:26.847663102Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T17:22:26.847672589Z","kind":"stdout","line":"Main failure:"}
+{"ts":"2026-03-24T17:22:26.847675064Z","kind":"stdout","line":"- `tests/e2e/test_api_hang.sh` expected the stopped process to still be alive before `SIGCONT`, but it had already been killed:"}
+{"ts":"2026-03-24T17:22:26.847678467Z","kind":"stdout","line":"  - `expected stopped process to remain alive until continued`"}
+{"ts":"2026-03-24T17:22:26.847681148Z","kind":"stdout","line":"  - `tests/e2e/test_api_hang.sh: line 1: 491435 Killed sleep 600`"}
+{"ts":"2026-03-24T17:22:26.847683211Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T17:22:26.847685170Z","kind":"stdout","line":"It also printed warnings about unused functions:"}
+{"ts":"2026-03-24T17:22:26.847687232Z","kind":"stdout","line":"- `src/cmd/common.rs:300`"}
+{"ts":"2026-03-24T17:22:26.847689398Z","kind":"stdout","line":"- `src/cmd/watch.rs:485`"}
+{"ts":"2026-03-24T17:22:26.847691460Z","kind":"stdout","line":"- `src/cmd/watch.rs:616`"}
+{"ts":"2026-03-24T17:22:26.847693317Z","kind":"stdout","line":"- `src/cmd/watch.rs:642`"}
+{"ts":"2026-03-24T17:22:26.847695173Z","kind":"stdout","line":"- `src/cmd/watch.rs:689`"}
+{"ts":"2026-03-24T17:22:26.847697235Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T17:22:26.847699091Z","kind":"stdout","line":"I later reran the e2e after fixes and it passed."}
+{"ts":"2026-03-24T17:22:27.465713017Z","kind":"session_ended","exit_code":0}

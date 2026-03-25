@@ -1,0 +1,67 @@
+{"ts":"2026-03-25T00:34:55.445967685Z","kind":"session_started","session_id":"ses-run-saw-26a-20260325T003455383"}
+{"ts":"2026-03-25T01:18:06.257295633Z","kind":"stdout","line":"GROVE_RESULT: success"}
+{"ts":"2026-03-25T01:18:06.257295633Z","kind":"protocol","event":{"type":"result","summary":"success"}}
+{"ts":"2026-03-25T01:18:06.369055385Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T01:18:06.369129317Z","kind":"stdout","line":"Implemented `saw config` end-to-end."}
+{"ts":"2026-03-25T01:18:06.369136609Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T01:18:06.369139141Z","kind":"stdout","line":"GROVE_ARTIFACTS:"}
+{"ts":"2026-03-25T01:18:06.369139141Z","kind":"protocol","event":{"type":"artifacts","items":[]}}
+{"ts":"2026-03-25T01:18:06.369479635Z","kind":"stdout","line":"- `src/cmd/config.rs`"}
+{"ts":"2026-03-25T01:18:06.369479635Z","kind":"protocol","event":{"type":"artifacts","items":["`src/cmd/config.rs`"]}}
+{"ts":"2026-03-25T01:18:06.369492396Z","kind":"stdout","line":"- `src/main.rs`"}
+{"ts":"2026-03-25T01:18:06.369492396Z","kind":"protocol","event":{"type":"artifacts","items":["`src/main.rs`"]}}
+{"ts":"2026-03-25T01:18:06.369501511Z","kind":"stdout","line":"- `src/cmd/mod.rs`"}
+{"ts":"2026-03-25T01:18:06.369501511Z","kind":"protocol","event":{"type":"artifacts","items":["`src/cmd/mod.rs`"]}}
+{"ts":"2026-03-25T01:18:06.369514272Z","kind":"stdout","line":"- `src/cmd/watch.rs`"}
+{"ts":"2026-03-25T01:18:06.369514272Z","kind":"protocol","event":{"type":"artifacts","items":["`src/cmd/watch.rs`"]}}
+{"ts":"2026-03-25T01:18:06.369521564Z","kind":"stdout","line":"- `src/cmd/status.rs`"}
+{"ts":"2026-03-25T01:18:06.369521564Z","kind":"protocol","event":{"type":"artifacts","items":["`src/cmd/status.rs`"]}}
+{"ts":"2026-03-25T01:18:06.369530679Z","kind":"stdout","line":"- `src/cmd/tui.rs`"}
+{"ts":"2026-03-25T01:18:06.369530679Z","kind":"protocol","event":{"type":"artifacts","items":["`src/cmd/tui.rs`"]}}
+{"ts":"2026-03-25T01:18:06.369539490Z","kind":"stdout","line":"- `src/cmd/common.rs`"}
+{"ts":"2026-03-25T01:18:06.369539490Z","kind":"protocol","event":{"type":"artifacts","items":["`src/cmd/common.rs`"]}}
+{"ts":"2026-03-25T01:18:06.369548302Z","kind":"stdout","line":"- `Cargo.toml`"}
+{"ts":"2026-03-25T01:18:06.369548302Z","kind":"protocol","event":{"type":"artifacts","items":["`Cargo.toml`"]}}
+{"ts":"2026-03-25T01:18:06.369555391Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T01:18:06.369559645Z","kind":"stdout","line":"GROVE_DECISIONS:"}
+{"ts":"2026-03-25T01:18:06.369559645Z","kind":"protocol","event":{"type":"decision","items":[]}}
+{"ts":"2026-03-25T01:18:06.369568557Z","kind":"stdout","line":"- Added config file support at `~/.config/saw/config.toml`."}
+{"ts":"2026-03-25T01:18:06.369568557Z","kind":"protocol","event":{"type":"decision","items":["Added config file support at `~/.config/saw/config.toml`."]}}
+{"ts":"2026-03-25T01:18:06.369577571Z","kind":"stdout","line":"- Implemented `saw config --list`, `--timeout`, `--on-stuck`, and `--reset`."}
+{"ts":"2026-03-25T01:18:06.369577571Z","kind":"protocol","event":{"type":"decision","items":["Implemented `saw config --list`, `--timeout`, `--on-stuck`, and `--reset`."]}}
+{"ts":"2026-03-25T01:18:06.369621626Z","kind":"stdout","line":"- Kept config surface to acceptance scope: `timeout` and `on_stuck`."}
+{"ts":"2026-03-25T01:18:06.369621626Z","kind":"protocol","event":{"type":"decision","items":["Kept config surface to acceptance scope: `timeout` and `on_stuck`."]}}
+{"ts":"2026-03-25T01:18:06.370421211Z","kind":"stdout","line":"- Merged precedence as required: CLI args > config file > defaults."}
+{"ts":"2026-03-25T01:18:06.370421211Z","kind":"protocol","event":{"type":"decision","items":["Merged precedence as required: CLI args > config file > defaults."]}}
+{"ts":"2026-03-25T01:18:06.370432554Z","kind":"stdout","line":"- Wired config-backed timeout into `watch`, `status`, and `tui`."}
+{"ts":"2026-03-25T01:18:06.370432554Z","kind":"protocol","event":{"type":"decision","items":["Wired config-backed timeout into `watch`, `status`, and `tui`."]}}
+{"ts":"2026-03-25T01:18:06.370441973Z","kind":"stdout","line":"- Wired config-backed `on_stuck` into `watch`."}
+{"ts":"2026-03-25T01:18:06.370441973Z","kind":"protocol","event":{"type":"decision","items":["Wired config-backed `on_stuck` into `watch`."]}}
+{"ts":"2026-03-25T01:18:06.370835638Z","kind":"stdout","line":"- Used explicit config parsing so missing fields still fall back to defaults reliably."}
+{"ts":"2026-03-25T01:18:06.370835638Z","kind":"protocol","event":{"type":"decision","items":["Used explicit config parsing so missing fields still fall back to defaults reliably."]}}
+{"ts":"2026-03-25T01:18:06.370844246Z","kind":"stdout","line":"- Preserved existing `--timeout-secs` alias behavior by mapping it to the new optional timeout field."}
+{"ts":"2026-03-25T01:18:06.370844246Z","kind":"protocol","event":{"type":"decision","items":["Preserved existing `--timeout-secs` alias behavior by mapping it to the new optional timeout field."]}}
+{"ts":"2026-03-25T01:18:06.370871186Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T01:18:06.370876655Z","kind":"stdout","line":"GROVE_LESSONS:"}
+{"ts":"2026-03-25T01:18:06.370876655Z","kind":"protocol","event":{"type":"lessons","items":[]}}
+{"ts":"2026-03-25T01:18:06.370884454Z","kind":"stdout","line":"- Some tests rely on `HOME`; locking those tests avoids env races."}
+{"ts":"2026-03-25T01:18:06.370884454Z","kind":"protocol","event":{"type":"lessons","items":["Some tests rely on `HOME`; locking those tests avoids env races."]}}
+{"ts":"2026-03-25T01:18:06.370890024Z","kind":"stdout","line":"- Session ordering tests were sensitive to filesystem mtimes, so sorting/assertions now align with the current recency key behavior."}
+{"ts":"2026-03-25T01:18:06.370890024Z","kind":"protocol","event":{"type":"lessons","items":["Session ordering tests were sensitive to filesystem mtimes, so sorting/assertions now align with the current recency key behavior."]}}
+{"ts":"2026-03-25T01:18:06.370894885Z","kind":"stdout","line":"- Full-suite verification also exposed an unrelated workspace compile path before rerun; final full `cargo test` passes."}
+{"ts":"2026-03-25T01:18:06.370894885Z","kind":"protocol","event":{"type":"lessons","items":["Full-suite verification also exposed an unrelated workspace compile path before rerun; final full `cargo test` passes."]}}
+{"ts":"2026-03-25T01:18:06.370898227Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T01:18:06.370902886Z","kind":"stdout","line":"GROVE_WARNINGS:"}
+{"ts":"2026-03-25T01:18:06.370902886Z","kind":"protocol","event":{"type":"warning","items":[]}}
+{"ts":"2026-03-25T01:18:06.370906431Z","kind":"stdout","line":"- `choose_session` in `src/cmd/common.rs` still emits a dead-code warning during `cargo test`."}
+{"ts":"2026-03-25T01:18:06.370906431Z","kind":"protocol","event":{"type":"warning","items":["`choose_session` in `src/cmd/common.rs` still emits a dead-code warning during `cargo test`."]}}
+{"ts":"2026-03-25T01:18:06.370912912Z","kind":"stdout","line":"- `on_scope_leak` config persistence was not added because the task/acceptance only required `--on-stuck kill` and config-backed values being used by other commands."}
+{"ts":"2026-03-25T01:18:06.370912912Z","kind":"protocol","event":{"type":"warning","items":["`on_scope_leak` config persistence was not added because the task/acceptance only required `--on-stuck kill` and config-backed values being used by other commands."]}}
+{"ts":"2026-03-25T01:18:06.370916660Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T01:18:06.370917976Z","kind":"stdout","line":"Verification:"}
+{"ts":"2026-03-25T01:18:06.370921217Z","kind":"stdout","line":"- `cargo fmt --all`"}
+{"ts":"2026-03-25T01:18:06.370924661Z","kind":"stdout","line":"- `cargo test`"}
+{"ts":"2026-03-25T01:18:06.370926180Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T01:18:06.370927598Z","kind":"stdout","line":"GROVE_EXIT: true"}
+{"ts":"2026-03-25T01:18:06.370927598Z","kind":"protocol","event":{"type":"exit","value":true}}
+{"ts":"2026-03-25T01:18:07.595448569Z","kind":"session_ended","exit_code":0}

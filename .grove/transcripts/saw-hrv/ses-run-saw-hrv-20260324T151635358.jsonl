@@ -1,0 +1,38 @@
+{"ts":"2026-03-24T15:16:35.366507459Z","kind":"session_started","session_id":"ses-run-saw-hrv-20260324T151635358"}
+{"ts":"2026-03-24T15:22:04.025866519Z","kind":"stdout","line":"GROVE_RESULT: success"}
+{"ts":"2026-03-24T15:22:04.025866519Z","kind":"protocol","event":{"type":"result","summary":"success"}}
+{"ts":"2026-03-24T15:22:04.039025779Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:22:04.039037056Z","kind":"stdout","line":"Added integration tests in `tests/metrics_tests.rs:1` covering:"}
+{"ts":"2026-03-24T15:22:04.039039800Z","kind":"stdout","line":"- `compute_silence()` max-of-visible-timestamps behavior and fallback paths"}
+{"ts":"2026-03-24T15:22:04.039041933Z","kind":"stdout","line":"- `TokenTracker.is_frozen()` stalled vs recent state"}
+{"ts":"2026-03-24T15:22:04.039062557Z","kind":"stdout","line":"- `activity_weight()` sidechain vs non-sidechain values"}
+{"ts":"2026-03-24T15:22:04.039065707Z","kind":"stdout","line":"- `is_bash_failure()` across the 4 failure signal types plus a success case"}
+{"ts":"2026-03-24T15:22:04.039067840Z","kind":"stdout","line":"- `compute_io_rate()` retained from the helper set while already in scope"}
+{"ts":"2026-03-24T15:22:04.039069974Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:22:04.039072107Z","kind":"stdout","line":"GROVE_ARTIFACTS:"}
+{"ts":"2026-03-24T15:22:04.039072107Z","kind":"protocol","event":{"type":"artifacts","items":[]}}
+{"ts":"2026-03-24T15:22:04.039536609Z","kind":"stdout","line":"- `tests/metrics_tests.rs:1`"}
+{"ts":"2026-03-24T15:22:04.039536609Z","kind":"protocol","event":{"type":"artifacts","items":["`tests/metrics_tests.rs:1`"]}}
+{"ts":"2026-03-24T15:22:04.039545347Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:22:04.039548293Z","kind":"stdout","line":"GROVE_LESSONS:"}
+{"ts":"2026-03-24T15:22:04.039548293Z","kind":"protocol","event":{"type":"lessons","items":[]}}
+{"ts":"2026-03-24T15:22:04.039564650Z","kind":"stdout","line":"- `TokenTracker::is_frozen()` can be tested through public API by constructing trackers with past `Instant`s, avoiding access to private helper methods."}
+{"ts":"2026-03-24T15:22:04.039564650Z","kind":"protocol","event":{"type":"lessons","items":["`TokenTracker::is_frozen()` can be tested through public API by constructing trackers with past `Instant`s, avoiding access to private helper methods."]}}
+{"ts":"2026-03-24T15:22:04.039602647Z","kind":"stdout","line":"- `compute_silence()` intentionally prioritizes visible activity sources (`last_jsonl_record_at`, `last_file_event_at`, `last_hook_event_at`) over `last_event_at`."}
+{"ts":"2026-03-24T15:22:04.039602647Z","kind":"protocol","event":{"type":"lessons","items":["`compute_silence()` intentionally prioritizes visible activity sources (`last_jsonl_record_at`, `last_file_event_at`, `last_hook_event_at`) over `last_event_at`."]}}
+{"ts":"2026-03-24T15:22:04.039608845Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:22:04.039610978Z","kind":"stdout","line":"GROVE_DECISIONS:"}
+{"ts":"2026-03-24T15:22:04.039610978Z","kind":"protocol","event":{"type":"decision","items":[]}}
+{"ts":"2026-03-24T15:22:04.039615550Z","kind":"stdout","line":"- Added the requested tests as an integration test file at `tests/metrics_tests.rs` instead of modifying the existing internal unit tests in `crates/saw-core/src/metrics.rs:253`."}
+{"ts":"2026-03-24T15:22:04.039615550Z","kind":"protocol","event":{"type":"decision","items":["Added the requested tests as an integration test file at `tests/metrics_tests.rs` instead of modifying the existing internal unit tests in `crates/saw-core/src/metrics.rs:253`."]}}
+{"ts":"2026-03-24T15:22:04.039620833Z","kind":"stdout","line":"- Kept `is_bash_failure()` coverage aligned to the acceptance criteria’s 4 signal classes: `is_error`, non-empty `stderr`, `interrupted`, and content-pattern failure text."}
+{"ts":"2026-03-24T15:22:04.039620833Z","kind":"protocol","event":{"type":"decision","items":["Kept `is_bash_failure()` coverage aligned to the acceptance criteria’s 4 signal classes: `is_error`, non-empty `stderr`, `interrupted`, and content-pattern failure text."]}}
+{"ts":"2026-03-24T15:22:04.039625811Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:22:04.039635362Z","kind":"stdout","line":"GROVE_WARNINGS:"}
+{"ts":"2026-03-24T15:22:04.039635362Z","kind":"protocol","event":{"type":"warning","items":[]}}
+{"ts":"2026-03-24T15:22:04.039638511Z","kind":"stdout","line":"- The repo already has overlapping in-module unit tests for some of these helpers in `crates/saw-core/src/metrics.rs:274`; this new file duplicates some coverage intentionally to satisfy the task requirement to create `tests/metrics_tests.rs`."}
+{"ts":"2026-03-24T15:22:04.039638511Z","kind":"protocol","event":{"type":"warning","items":["The repo already has overlapping in-module unit tests for some of these helpers in `crates/saw-core/src/metrics.rs:274`; this new file duplicates some coverage intentionally to satisfy the task requirement to create `tests/metrics_tests.rs`."]}}
+{"ts":"2026-03-24T15:22:04.039641762Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T15:22:04.039643083Z","kind":"stdout","line":"GROVE_EXIT: true"}
+{"ts":"2026-03-24T15:22:04.039643083Z","kind":"protocol","event":{"type":"exit","value":true}}
+{"ts":"2026-03-24T15:22:04.406910734Z","kind":"session_ended","exit_code":0}

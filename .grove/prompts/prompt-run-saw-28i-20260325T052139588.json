@@ -1,0 +1,221 @@
+{
+  "prompt_id": "prompt-run-saw-28i-20260325T052139588",
+  "bead_id": "saw-28i",
+  "run_id": "run-saw-28i-20260325T052139588",
+  "session_id": "ses-run-saw-28i-20260325T052139588",
+  "contract": "RetryRescue",
+  "created_at": "2026-03-25T05:21:39.694865196Z",
+  "token_budget": null,
+  "estimated_tokens": 658,
+  "prompt_bytes": 2630,
+  "trimmed": false,
+  "retry_delta_summary": "Changed retry framing: avoid attaching or opening image inputs, validate existing artifacts and README links textually first, and only touch media paths if a text-only check cannot finish the task.",
+  "retrieval_query": "comprehensive OR Configuration OR installation OR installation OR Installation",
+  "retrieval_ranking_summary": [
+    "Historical snippet (Score: 16.49)",
+    "Historical snippet (Score: 15.66)",
+    "Historical snippet (Score: 14.90)",
+    "Historical snippet (Score: 14.10)",
+    "Historical snippet (Score: 13.78)"
+  ],
+  "sections": [
+    {
+      "ordinal": 1,
+      "kind": "Contract",
+      "heading": "Execution contract",
+      "included": true,
+      "estimated_tokens": 80,
+      "char_count": 318,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "[EXECUTION CONTRACT]\nRetry the task with a changed approach that avoids repeatin…"
+    },
+    {
+      "ordinal": 2,
+      "kind": "Task",
+      "heading": "Task",
+      "included": true,
+      "estimated_tokens": 176,
+      "char_count": 703,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "[TASK]\nTitle: Write README.md with demo and installation\n\nCreate comprehensive R…"
+    },
+    {
+      "ordinal": 3,
+      "kind": "ParentHandoff",
+      "heading": "Parent handoff",
+      "included": true,
+      "estimated_tokens": 20,
+      "char_count": 79,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "Parent saw-1rb (run run-saw-1rb-20260325T002531664) prepared this task: success"
+    },
+    {
+      "ordinal": 4,
+      "kind": "ArchiveSnippet",
+      "heading": "Historical snippet (Score: 16.49)",
+      "included": true,
+      "estimated_tokens": 24,
+      "char_count": 96,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": "2095",
+        "playbook_bullet_id": null
+      },
+      "preview": "From .grove/transcripts/saw-1rb/ses-run-saw-1rb-20260324T235846205.jsonl\n- `<b>i…"
+    },
+    {
+      "ordinal": 5,
+      "kind": "ArchiveSnippet",
+      "heading": "Historical snippet (Score: 15.66)",
+      "included": true,
+      "estimated_tokens": 27,
+      "char_count": 106,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": "2169",
+        "playbook_bullet_id": null
+      },
+      "preview": "From .grove/transcripts/saw-1rb/ses-run-saw-1rb-20260325T002531664.jsonl\n- `bash…"
+    },
+    {
+      "ordinal": 6,
+      "kind": "ArchiveSnippet",
+      "heading": "Historical snippet (Score: 14.90)",
+      "included": true,
+      "estimated_tokens": 28,
+      "char_count": 111,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": "2096",
+        "playbook_bullet_id": null
+      },
+      "preview": "From .grove/transcripts/saw-1rb/ses-run-saw-1rb-20260324T235846205.jsonl\nGROVE_A…"
+    },
+    {
+      "ordinal": 7,
+      "kind": "ArchiveSnippet",
+      "heading": "Historical snippet (Score: 14.10)",
+      "included": true,
+      "estimated_tokens": 49,
+      "char_count": 194,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": "2505",
+        "playbook_bullet_id": null
+      },
+      "preview": "From .grove/transcripts/saw-132/ses-run-saw-132-20260325T010732045.jsonl\n- Prese…"
+    },
+    {
+      "ordinal": 8,
+      "kind": "ArchiveSnippet",
+      "heading": "Historical snippet (Score: 13.78)",
+      "included": true,
+      "estimated_tokens": 50,
+      "char_count": 199,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": "2621",
+        "playbook_bullet_id": null
+      },
+      "preview": "From .grove/transcripts/saw-16i/ses-run-saw-16i-20260325T010752678.jsonl\n- `<b>i…"
+    },
+    {
+      "ordinal": 9,
+      "kind": "EscalationContext",
+      "heading": "Escalation context (tier 0)",
+      "included": true,
+      "estimated_tokens": 13,
+      "char_count": 103,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "[ESCALATION CONTEXT]\nTier: FirstAttempt (attempt 0)\nInitial attempt. Proceed nor…"
+    },
+    {
+      "ordinal": 10,
+      "kind": "Protocol",
+      "heading": "Grove protocol",
+      "included": true,
+      "estimated_tokens": 94,
+      "char_count": 374,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "[GROVE PROTOCOL]\nEmit GROVE_RESULT, GROVE_ARTIFACTS, GROVE_LESSONS, GROVE_DECISI…"
+    },
+    {
+      "ordinal": 11,
+      "kind": "RescueCard",
+      "heading": "Rescue card",
+      "included": true,
+      "estimated_tokens": 82,
+      "char_count": 327,
+      "trim_reason": null,
+      "provenance": {
+        "source_ids": [],
+        "bullet_ids": [],
+        "checkpoint_id": null,
+        "handoff_run_id": null,
+        "archive_message_id": null,
+        "playbook_bullet_id": null
+      },
+      "preview": "- Do not attach, open, or inspect image inputs on this retry.\n- Validate demo/me…"
+    }
+  ]
+}

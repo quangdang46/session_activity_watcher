@@ -1,0 +1,48 @@
+{"ts":"2026-03-25T00:34:55.348086375Z","kind":"session_started","session_id":"ses-run-saw-3pc-20260325T003455220"}
+{"ts":"2026-03-25T01:14:01.815018129Z","kind":"stdout","line":"GROVE_RESULT:"}
+{"ts":"2026-03-25T01:14:01.859297222Z","kind":"stdout","line":"Implemented concurrent-session handling across `saw` commands."}
+{"ts":"2026-03-25T01:14:01.859308669Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T01:14:01.859311583Z","kind":"stdout","line":"- Added session discovery/selection primitives and recency ordering in `src/cmd/common.rs:55`, `src/cmd/common.rs:163`, `src/cmd/common.rs:663`, `src/cmd/common.rs:722`, `src/cmd/common.rs:808`."}
+{"ts":"2026-03-25T01:14:01.860098836Z","kind":"stdout","line":"- `saw watch` now supports `--session <uuid>` and defaults to the most recent matching session in the cwd via `src/cmd/watch.rs:61` and `src/cmd/watch.rs:269`."}
+{"ts":"2026-03-25T01:14:01.860105704Z","kind":"stdout","line":"- `saw status` now supports `--session <uuid>` and `--all`; single-session status prompts when multiple matching sessions exist, while `--all` renders all matching sessions via `src/cmd/status.rs:24`, `src/cmd/status.rs:27`, `src/cmd/status.rs:62`."}
+{"ts":"2026-03-25T01:14:01.860108826Z","kind":"stdout","line":"- Explicit session snapshots now preserve live PID/process metrics even when multiple sessions share one cwd via `src/cmd/common.rs:163`."}
+{"ts":"2026-03-25T01:14:01.860111531Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T01:14:01.860114029Z","kind":"stdout","line":"GROVE_ARTIFACTS:"}
+{"ts":"2026-03-25T01:14:01.860114029Z","kind":"protocol","event":{"type":"artifacts","items":[]}}
+{"ts":"2026-03-25T01:14:01.861049783Z","kind":"stdout","line":"- `src/cmd/common.rs`"}
+{"ts":"2026-03-25T01:14:01.861049783Z","kind":"protocol","event":{"type":"artifacts","items":["`src/cmd/common.rs`"]}}
+{"ts":"2026-03-25T01:14:01.861057275Z","kind":"stdout","line":"- `src/cmd/status.rs`"}
+{"ts":"2026-03-25T01:14:01.861057275Z","kind":"protocol","event":{"type":"artifacts","items":["`src/cmd/status.rs`"]}}
+{"ts":"2026-03-25T01:14:01.861062167Z","kind":"stdout","line":"- `src/cmd/watch.rs`"}
+{"ts":"2026-03-25T01:14:01.861062167Z","kind":"protocol","event":{"type":"artifacts","items":["`src/cmd/watch.rs`"]}}
+{"ts":"2026-03-25T01:14:01.861066745Z","kind":"stdout","line":"- `src/cmd/config.rs`"}
+{"ts":"2026-03-25T01:14:01.861066745Z","kind":"protocol","event":{"type":"artifacts","items":["`src/cmd/config.rs`"]}}
+{"ts":"2026-03-25T01:14:01.861071636Z","kind":"stdout","line":"- `src/cmd/tui.rs`"}
+{"ts":"2026-03-25T01:14:01.861071636Z","kind":"protocol","event":{"type":"artifacts","items":["`src/cmd/tui.rs`"]}}
+{"ts":"2026-03-25T01:14:01.861076528Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T01:14:01.861079441Z","kind":"stdout","line":"GROVE_DECISIONS:"}
+{"ts":"2026-03-25T01:14:01.861079441Z","kind":"protocol","event":{"type":"decision","items":[]}}
+{"ts":"2026-03-25T01:14:01.861084541Z","kind":"stdout","line":"- Used `(started_at, jsonl mtime)` as the recency key so default selection is stable and still prefers the most recently active session."}
+{"ts":"2026-03-25T01:14:01.861084541Z","kind":"protocol","event":{"type":"decision","items":["Used `(started_at, jsonl mtime)` as the recency key so default selection is stable and still prefers the most recently active session."]}}
+{"ts":"2026-03-25T01:14:01.861089848Z","kind":"stdout","line":"- Kept `watch` non-interactive by defaulting to the most recent session; applied the selection prompt to `status` for the “show selection prompt” acceptance behavior."}
+{"ts":"2026-03-25T01:14:01.861089848Z","kind":"protocol","event":{"type":"decision","items":["Kept `watch` non-interactive by defaulting to the most recent session; applied the selection prompt to `status` for the “show selection prompt” acceptance behavior."]}}
+{"ts":"2026-03-25T01:14:01.861119923Z","kind":"stdout","line":"- Added a shared HOME-env test lock to avoid flaky tests that mutate `HOME`."}
+{"ts":"2026-03-25T01:14:01.861119923Z","kind":"protocol","event":{"type":"decision","items":["Added a shared HOME-env test lock to avoid flaky tests that mutate `HOME`."]}}
+{"ts":"2026-03-25T01:14:01.861136261Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T01:14:01.861138654Z","kind":"stdout","line":"GROVE_LESSONS:"}
+{"ts":"2026-03-25T01:14:01.861138654Z","kind":"protocol","event":{"type":"lessons","items":[]}}
+{"ts":"2026-03-25T01:14:01.861142609Z","kind":"stdout","line":"- Tests that mutate `HOME` were racing; serializing them was necessary for stable session/config tests."}
+{"ts":"2026-03-25T01:14:01.861142609Z","kind":"protocol","event":{"type":"lessons","items":["Tests that mutate `HOME` were racing; serializing them was necessary for stable session/config tests."]}}
+{"ts":"2026-03-25T01:14:01.861146043Z","kind":"stdout","line":"- Recency based only on filesystem mtime was too flaky in tests; combining it with `startedAt` made ordering deterministic."}
+{"ts":"2026-03-25T01:14:01.861146043Z","kind":"protocol","event":{"type":"lessons","items":["Recency based only on filesystem mtime was too flaky in tests; combining it with `startedAt` made ordering deterministic."]}}
+{"ts":"2026-03-25T01:14:01.861148957Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T01:14:01.861150414Z","kind":"stdout","line":"GROVE_WARNINGS:"}
+{"ts":"2026-03-25T01:14:01.861150414Z","kind":"protocol","event":{"type":"warning","items":[]}}
+{"ts":"2026-03-25T01:14:01.861153328Z","kind":"stdout","line":"- The selection prompt behavior is implemented for `saw status` when multiple cwd-matching sessions exist. `saw watch` intentionally remains non-interactive and auto-selects the most recent session per the task requirement."}
+{"ts":"2026-03-25T01:14:01.861153328Z","kind":"protocol","event":{"type":"warning","items":["The selection prompt behavior is implemented for `saw status` when multiple cwd-matching sessions exist. `saw watch` intentionally remains non-interactive and auto-selects the most recent session per the task requirement."]}}
+{"ts":"2026-03-25T01:14:01.861157074Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T01:14:01.861158427Z","kind":"stdout","line":"- Validation: `cargo test --bin saw` passed."}
+{"ts":"2026-03-25T01:14:01.861160092Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T01:14:01.861161549Z","kind":"stdout","line":"GROVE_EXIT: true"}
+{"ts":"2026-03-25T01:14:01.861161549Z","kind":"protocol","event":{"type":"exit","value":true}}
+{"ts":"2026-03-25T01:14:02.627437096Z","kind":"session_ended","exit_code":0}

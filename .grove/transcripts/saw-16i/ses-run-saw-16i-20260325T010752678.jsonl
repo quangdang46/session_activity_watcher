@@ -1,0 +1,49 @@
+{"ts":"2026-03-25T01:07:52.688495439Z","kind":"session_started","session_id":"ses-run-saw-16i-20260325T010752678"}
+{"ts":"2026-03-25T01:31:54.205786647Z","kind":"stdout","line":"GROVE_RESULT: success"}
+{"ts":"2026-03-25T01:31:54.205786647Z","kind":"protocol","event":{"type":"result","summary":"success"}}
+{"ts":"2026-03-25T01:31:55.518308864Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T01:31:55.518326528Z","kind":"stdout","line":"GROVE_ARTIFACTS:"}
+{"ts":"2026-03-25T01:31:55.518326528Z","kind":"protocol","event":{"type":"artifacts","items":[]}}
+{"ts":"2026-03-25T01:31:55.519508336Z","kind":"stdout","line":"- `install.sh:1` implements a curl\\|bash installer with platform detection, GitHub latest-release lookup, release download, extraction, install destination selection, checksum verification, uninstall support, and explicit permission/network errors."}
+{"ts":"2026-03-25T01:31:55.519508336Z","kind":"protocol","event":{"type":"artifacts","items":["`install.sh:1` implements a curl\\|bash installer with platform detection, GitHub latest-release lookup, release download, extraction, install destination selection, checksum verification, uninstall support, and explicit permission/network errors."]}}
+{"ts":"2026-03-25T01:31:55.519543768Z","kind":"stdout","line":"- `install.sh:103` defaults installs to `/usr/local/bin` when writable, otherwise `${CARGO_HOME:-$HOME/.cargo}/bin`."}
+{"ts":"2026-03-25T01:31:55.519543768Z","kind":"protocol","event":{"type":"artifacts","items":["`install.sh:103` defaults installs to `/usr/local/bin` when writable, otherwise `${CARGO_HOME:-$HOME/.cargo}/bin`."]}}
+{"ts":"2026-03-25T01:31:55.519550106Z","kind":"stdout","line":"- `install.sh:225` supports Linux x86_64/aarch64 and macOS x86_64/aarch64 platform detection and maps them to release artifact names used by the current workflow."}
+{"ts":"2026-03-25T01:31:55.519550106Z","kind":"protocol","event":{"type":"artifacts","items":["`install.sh:225` supports Linux x86_64/aarch64 and macOS x86_64/aarch64 platform detection and maps them to release artifact names used by the current workflow."]}}
+{"ts":"2026-03-25T01:31:55.519557587Z","kind":"stdout","line":"- `install.sh:452` falls back to `--from-source` build only after a release artifact download failure, while release lookup failures now stop with a helpful network/version message."}
+{"ts":"2026-03-25T01:31:55.519557587Z","kind":"protocol","event":{"type":"artifacts","items":["`install.sh:452` falls back to `--from-source` build only after a release artifact download failure, while release lookup failures now stop with a helpful network/version message."]}}
+{"ts":"2026-03-25T01:31:55.519585018Z","kind":"stdout","line":"- `install.sh:155` makes uninstall idempotent and safe to rerun."}
+{"ts":"2026-03-25T01:31:55.519585018Z","kind":"protocol","event":{"type":"artifacts","items":["`install.sh:155` makes uninstall idempotent and safe to rerun."]}}
+{"ts":"2026-03-25T01:31:55.519591044Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T01:31:55.519593642Z","kind":"stdout","line":"GROVE_LESSONS:"}
+{"ts":"2026-03-25T01:31:55.519593642Z","kind":"protocol","event":{"type":"lessons","items":[]}}
+{"ts":"2026-03-25T01:31:55.519598941Z","kind":"stdout","line":"- The current repo’s release workflow packages artifacts as `saw-<target>.tar.gz`, not `saw-<version>-<suffix>.tar.gz`, so the installer must match workflow naming, not the README example."}
+{"ts":"2026-03-25T01:31:55.519598941Z","kind":"protocol","event":{"type":"lessons","items":["The current repo’s release workflow packages artifacts as `saw-<target>.tar.gz`, not `saw-<version>-<suffix>.tar.gz`, so the installer must match workflow naming, not the README example."]}}
+{"ts":"2026-03-25T01:31:55.519625956Z","kind":"stdout","line":"- In this environment, `GET /repos/quangdang46/session_activity_watcher/releases/latest` returned 404, so the graceful failure path for “no published release yet” is important."}
+{"ts":"2026-03-25T01:31:55.519625956Z","kind":"protocol","event":{"type":"lessons","items":["In this environment, `GET /repos/quangdang46/session_activity_watcher/releases/latest` returned 404, so the graceful failure path for “no published release yet” is important."]}}
+{"ts":"2026-03-25T01:31:55.519647360Z","kind":"stdout","line":"- Falling back from “latest release lookup failed” into source build is misleading for curl\\|bash installs; it hides release/publication issues and can fail in unrelated ways."}
+{"ts":"2026-03-25T01:31:55.519647360Z","kind":"protocol","event":{"type":"lessons","items":["Falling back from “latest release lookup failed” into source build is misleading for curl\\|bash installs; it hides release/publication issues and can fail in unrelated ways."]}}
+{"ts":"2026-03-25T01:31:55.519650997Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T01:31:55.519652556Z","kind":"stdout","line":"GROVE_DECISIONS:"}
+{"ts":"2026-03-25T01:31:55.519652556Z","kind":"protocol","event":{"type":"decision","items":[]}}
+{"ts":"2026-03-25T01:31:55.519655880Z","kind":"stdout","line":"- Kept release installs as the default path and preserved `--from-source` as an explicit escape hatch."}
+{"ts":"2026-03-25T01:31:55.519655880Z","kind":"protocol","event":{"type":"decision","items":["Kept release installs as the default path and preserved `--from-source` as an explicit escape hatch."]}}
+{"ts":"2026-03-25T01:31:55.519679986Z","kind":"stdout","line":"- Chose `/usr/local/bin` when writable, else Cargo bin, per task requirements."}
+{"ts":"2026-03-25T01:31:55.519679986Z","kind":"protocol","event":{"type":"decision","items":["Chose `/usr/local/bin` when writable, else Cargo bin, per task requirements."]}}
+{"ts":"2026-03-25T01:31:55.519683623Z","kind":"stdout","line":"- Treated release lookup failure as a hard error with guidance, but treated missing artifact download as a source-build fallback when a version is already known."}
+{"ts":"2026-03-25T01:31:55.519683623Z","kind":"protocol","event":{"type":"decision","items":["Treated release lookup failure as a hard error with guidance, but treated missing artifact download as a source-build fallback when a version is already known."]}}
+{"ts":"2026-03-25T01:31:55.519686844Z","kind":"stdout","line":"- Kept uninstall idempotent by removing from the explicitly targeted destination or both default destinations when no destination was supplied."}
+{"ts":"2026-03-25T01:31:55.519686844Z","kind":"protocol","event":{"type":"decision","items":["Kept uninstall idempotent by removing from the explicitly targeted destination or both default destinations when no destination was supplied."]}}
+{"ts":"2026-03-25T01:31:55.519690273Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T01:31:55.519691727Z","kind":"stdout","line":"GROVE_WARNINGS:"}
+{"ts":"2026-03-25T01:31:55.519691727Z","kind":"protocol","event":{"type":"warning","items":[]}}
+{"ts":"2026-03-25T01:31:55.519695364Z","kind":"stdout","line":"- Full happy-path install from a published GitHub release could not be verified here because the repo currently appears to have no accessible `latest` GitHub release."}
+{"ts":"2026-03-25T01:31:55.519695364Z","kind":"protocol","event":{"type":"warning","items":["Full happy-path install from a published GitHub release could not be verified here because the repo currently appears to have no accessible `latest` GitHub release."]}}
+{"ts":"2026-03-25T01:31:55.519698689Z","kind":"stdout","line":"- `--from-source` validation in this environment failed because cloning the repo into a temp directory did not yield a buildable checkout; that path may need separate investigation if source installs are important."}
+{"ts":"2026-03-25T01:31:55.519698689Z","kind":"protocol","event":{"type":"warning","items":["`--from-source` validation in this environment failed because cloning the repo into a temp directory did not yield a buildable checkout; that path may need separate investigation if source installs are important."]}}
+{"ts":"2026-03-25T01:31:55.519701806Z","kind":"stdout","line":"- The installer now supports Linux arm64 in addition to the originally requested Linux x86_64 and macOS x86_64/arm64 because the release workflow already builds that target."}
+{"ts":"2026-03-25T01:31:55.519701806Z","kind":"protocol","event":{"type":"warning","items":["The installer now supports Linux arm64 in addition to the originally requested Linux x86_64 and macOS x86_64/arm64 because the release workflow already builds that target."]}}
+{"ts":"2026-03-25T01:31:55.519709183Z","kind":"stdout","line":""}
+{"ts":"2026-03-25T01:31:55.519710950Z","kind":"stdout","line":"GROVE_EXIT: true"}
+{"ts":"2026-03-25T01:31:55.519710950Z","kind":"protocol","event":{"type":"exit","value":true}}
+{"ts":"2026-03-25T01:31:58.331439241Z","kind":"session_ended","exit_code":0}

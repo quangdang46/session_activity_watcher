@@ -1,0 +1,12 @@
+{"ts":"2026-03-24T16:16:08.212416114Z","kind":"session_started","session_id":"ses-run-saw-tna-20260324T161608203"}
+{"ts":"2026-03-24T18:40:03.669515905Z","kind":"stdout","line":"Read it. The stronger result was:"}
+{"ts":"2026-03-24T18:40:03.697397790Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T18:40:03.697407666Z","kind":"stdout","line":"- it found exact line-level evidence that those task subjects appear inside real session logs"}
+{"ts":"2026-03-24T18:40:03.697410341Z","kind":"stdout","line":"- for this session, the matches were in `5050423a-63f1-416a-92b5-e8b52063a821.jsonl` at:"}
+{"ts":"2026-03-24T18:40:03.697412604Z","kind":"stdout","line":"  - line 159 for `Audit coverage against docs`"}
+{"ts":"2026-03-24T18:40:03.697717019Z","kind":"stdout","line":"  - line 188 for `Decompose docs into beads`"}
+{"ts":"2026-03-24T18:40:03.697731936Z","kind":"stdout","line":"  - line 159 again for `Add hotspot ownership tests`"}
+{"ts":"2026-03-24T18:40:03.697735331Z","kind":"stdout","line":"- it also showed older `why` logs where `TaskCreate` or user prompts referenced those same subjects directly"}
+{"ts":"2026-03-24T18:40:03.697738006Z","kind":"stdout","line":""}
+{"ts":"2026-03-24T18:40:03.697740784Z","kind":"stdout","line":"That gave extra confidence that team/task subjects and session logs are correlated in practice."}
+{"ts":"2026-03-24T18:40:04.377593042Z","kind":"session_ended","exit_code":0}
