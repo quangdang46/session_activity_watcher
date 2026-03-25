@@ -1,5 +1,6 @@
 use anyhow::{bail, Context, Result};
 use chrono::{SecondsFormat, Utc};
+#[cfg(unix)]
 use nix::{
     sys::signal::{kill, Signal},
     unistd::Pid as UnixPid,
@@ -31,7 +32,7 @@ pub fn home_env_test_lock() -> std::sync::MutexGuard<'static, ()> {
     HOME_ENV_TEST_LOCK
         .get_or_init(|| Mutex::new(()))
         .lock()
-        .expect("home env test lock poisoned")
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
 #[derive(Debug, Clone, Default)]
@@ -884,14 +885,27 @@ pub fn normalize_guard_paths(cwd: &Path, guards: &[PathBuf]) -> Vec<PathBuf> {
         .collect()
 }
 
+#[cfg(unix)]
 pub fn interrupt_pid(pid: u32) -> Result<()> {
     signal_pid(pid, Signal::SIGINT, "INT")
 }
 
+#[cfg(not(unix))]
+pub fn interrupt_pid(pid: u32) -> Result<()> {
+    bail!("interrupting pid {pid} is only supported on unix platforms")
+}
+
+#[cfg(unix)]
 pub fn force_kill_pid(pid: u32) -> Result<()> {
     signal_pid(pid, Signal::SIGKILL, "KILL")
 }
 
+#[cfg(not(unix))]
+pub fn force_kill_pid(pid: u32) -> Result<()> {
+    bail!("force-killing pid {pid} is only supported on unix platforms")
+}
+
+#[cfg(unix)]
 fn signal_pid(pid: u32, signal: Signal, signal_name: &str) -> Result<()> {
     let raw_pid = i32::try_from(pid).context("pid does not fit in platform pid_t")?;
     kill(UnixPid::from_raw(raw_pid), signal)
@@ -1070,7 +1084,7 @@ mod tests {
             ),
         ];
 
-        let (_, session) = choose_session(&sessions, Some(&project)).unwrap();
+        let (_, session) = choose_session(&sessions, Some(&project.canonicalize().unwrap())).unwrap();
         assert_eq!(session.session_id, "newer");
     }
 
@@ -1135,7 +1149,7 @@ mod tests {
 
         assert_eq!(
             normalize_guard_paths(&cwd, &[PathBuf::from("src/auth")]),
-            vec![guard]
+            vec![guard.canonicalize().unwrap()]
         );
     }
 

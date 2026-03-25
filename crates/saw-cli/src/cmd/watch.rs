@@ -1021,7 +1021,7 @@ mod tests {
         .unwrap();
 
         assert_eq!(target.pid, Some(wanted.id()));
-        assert_eq!(target.cwd, project);
+        assert_eq!(target.cwd, project.canonicalize().unwrap());
         assert!(target.jsonl_path.ends_with(Path::new("ses-wanted.jsonl")));
 
         restore_home(original_home);
@@ -1061,7 +1061,7 @@ mod tests {
         .unwrap();
 
         assert_eq!(target.pid, Some(newer.id()));
-        assert_eq!(target.cwd, project);
+        assert_eq!(target.cwd, project.canonicalize().unwrap());
         assert_eq!(target.jsonl_path, newer_jsonl);
 
         restore_home(original_home);
