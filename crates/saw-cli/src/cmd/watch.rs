@@ -10,8 +10,8 @@ use chrono::{DateTime, SecondsFormat, Utc};
 use clap::{Args, ValueEnum};
 use saw_core::{compute_silence, AgentPhase, AgentState, ClassifierConfig};
 use saw_daemon::{
-    AlertActionExecutor, AlertContext, AlertNotification, Alerter, AlerterConfig,
-    RuntimeConnectionState, RuntimeMonitorSnapshot, RuntimeStateRefresher,
+    AlertActionExecutor, AlertContext, AlertNotification, AlertPolicyDecision, Alerter,
+    AlerterConfig, RuntimeConnectionState, RuntimeMonitorSnapshot, RuntimeStateRefresher,
     ScopeLeakAction as DaemonScopeLeakAction, StuckAction as DaemonStuckAction, WatcherRuntime,
     WatcherRuntimeOptions, WatcherRuntimeTarget, DEFAULT_ALERT_RATE_LIMIT,
 };
@@ -146,7 +146,7 @@ async fn run_async(args: WatchArgs) -> Result<()> {
     let mut executor = WatchActionExecutor;
     let initial_timestamp = initial.timestamp;
     let current_phase = initial.phase.clone();
-    let initial_alert = alerter.on_phase_change(
+    let initial_decision = alerter.evaluate_phase_change(
         None,
         &current_phase,
         AlertContext {
@@ -157,6 +157,7 @@ async fn run_async(args: WatchArgs) -> Result<()> {
         },
         &mut executor,
     )?;
+    let initial_alert = initial_decision.notification.as_ref();
 
     emit_status(
         None,
@@ -167,9 +168,9 @@ async fn run_async(args: WatchArgs) -> Result<()> {
         &args,
         initial_timestamp,
         &alerter,
-        initial_alert.as_ref(),
+        &initial_decision,
     )?;
-    if let Some(alert) = initial_alert.as_ref() {
+    if let Some(alert) = initial_alert {
         emit_alert_output(alert, args.robot);
     }
 
@@ -188,7 +189,7 @@ async fn run_async(args: WatchArgs) -> Result<()> {
                     state = update.state.clone();
                     monitor = update.monitor.clone();
                     let phase = update.phase.clone();
-                    let alert = alerter.on_phase_change(
+                    let decision = alerter.evaluate_phase_change(
                         previous_phase.as_ref(),
                         &phase,
                         AlertContext {
@@ -199,6 +200,7 @@ async fn run_async(args: WatchArgs) -> Result<()> {
                         },
                         &mut executor,
                     )?;
+                    let alert = decision.notification.as_ref();
                     emit_status(
                         previous_phase.as_ref(),
                         &phase,
@@ -208,9 +210,9 @@ async fn run_async(args: WatchArgs) -> Result<()> {
                         &args,
                         timestamp,
                         &alerter,
-                        alert.as_ref(),
+                        &decision,
                     )?;
-                    if let Some(alert) = alert.as_ref() {
+                    if let Some(alert) = alert {
                         emit_alert_output(alert, args.robot);
                     }
 
@@ -261,8 +263,9 @@ fn emit_status(
     args: &WatchArgs,
     timestamp: DateTime<Utc>,
     alerter: &Alerter,
-    alert: Option<&AlertNotification>,
+    decision: &AlertPolicyDecision,
 ) -> Result<()> {
+    let alert = decision.notification.as_ref();
     if args.robot && alert.is_some() {
         return Ok(());
     }
@@ -281,7 +284,7 @@ fn emit_status(
                 monitor,
                 target,
                 timestamp,
-                alert,
+                decision,
             ))?
         );
     } else {
@@ -293,7 +296,7 @@ fn emit_status(
             target,
             args,
             timestamp,
-            alert,
+            decision,
         );
     }
     std::io::stdout().flush()?;
@@ -308,8 +311,9 @@ fn status_payload(
     monitor: &RuntimeMonitorSnapshot,
     target: &WatchTarget,
     timestamp: DateTime<Utc>,
-    alert: Option<&AlertNotification>,
+    decision: &AlertPolicyDecision,
 ) -> Value {
+    let alert = decision.notification.as_ref();
     let phase_changed = phase_kind_changed(previous_phase, phase);
     json!({
         "event": if phase_changed { "phase_change" } else { "status" },
@@ -331,6 +335,10 @@ fn status_payload(
         "runtime_retry_secs": runtime_retry_secs(&monitor.connection_state),
         "stream_heartbeat_secs": heartbeat_age_secs(monitor.last_stream_heartbeat_at, timestamp),
         "process_heartbeat_secs": heartbeat_age_secs(monitor.last_process_heartbeat_at, timestamp),
+        "policy_state": format!("{:?}", decision.state).to_lowercase(),
+        "policy_action": decision.action,
+        "policy_reason": decision.reason,
+        "policy_explanation": decision.explanation,
         "suggestion": alert.and_then(|value| value.suggestion),
         "details": phase_details(phase, state, &target.cwd, timestamp),
     })
@@ -344,8 +352,9 @@ fn print_human_status(
     target: &WatchTarget,
     args: &WatchArgs,
     timestamp: DateTime<Utc>,
-    alert: Option<&AlertNotification>,
+    decision: &AlertPolicyDecision,
 ) {
+    let alert = decision.notification.as_ref();
     if alert.is_some() {
         return;
     }
@@ -367,7 +376,7 @@ fn print_human_status(
         .unwrap_or_default();
 
     println!(
-        "{} {} {}{} pid={} file={} silence={}s cpu={:.1}% runtime={} session={} source={}",
+        "{} {} {}{} pid={} file={} silence={}s cpu={:.1}% runtime={} policy={} session={} source={}",
         format_timestamp(timestamp),
         prefix,
         phase_display,
@@ -384,6 +393,7 @@ fn print_human_status(
         compute_silence(state, timestamp).as_secs(),
         state.latest_cpu_percent,
         runtime_summary(monitor, timestamp),
+        policy_summary(decision),
         state
             .session_id
             .as_deref()
@@ -616,6 +626,14 @@ fn runtime_summary(monitor: &RuntimeMonitorSnapshot, timestamp: DateTime<Utc>) -
     format!("{state}{reason}{retry}{process_heartbeat}{stream_heartbeat}")
 }
 
+fn policy_summary(decision: &AlertPolicyDecision) -> String {
+    format!(
+        "{:?}:{}:{}",
+        decision.state, decision.action, decision.reason
+    )
+    .to_lowercase()
+}
+
 fn format_timestamp(timestamp: DateTime<Utc>) -> String {
     timestamp.to_rfc3339_opts(SecondsFormat::Secs, true)
 }
@@ -646,7 +664,8 @@ mod tests {
     use chrono::{TimeZone, Utc};
     use saw_core::{classify, AgentPhase, ClassifierConfig};
     use saw_daemon::{
-        RuntimeConnectionState, RuntimeMonitorSnapshot, StuckAction as DaemonStuckAction,
+        AlertDecisionState, AlertPolicyDecision, RuntimeConnectionState, RuntimeMonitorSnapshot,
+        StuckAction as DaemonStuckAction,
     };
     use serde_json::Value;
     use std::ffi::OsString;
@@ -808,7 +827,7 @@ mod tests {
             &healthy_monitor(fixed_timestamp()),
             &target,
             fixed_timestamp(),
-            Some(&AlertNotification {
+            &executed_decision(Some(AlertNotification {
                 timestamp: fixed_timestamp(),
                 previous_phase: Some("THINKING"),
                 phase: "API_HANG",
@@ -816,7 +835,7 @@ mod tests {
                 suggestion: Some("send a follow-up or use --on-stuck kill if it stays blocked"),
                 action: "warn",
                 checkpoint_dir: None,
-            }),
+            })),
         );
 
         assert_eq!(payload["event"], Value::String("phase_change".into()));
@@ -855,7 +874,7 @@ mod tests {
             &healthy_monitor(timestamp),
             &target,
             timestamp,
-            Some(&AlertNotification {
+            &executed_decision(Some(AlertNotification {
                 timestamp,
                 previous_phase: Some("WORKING"),
                 phase: "TASK_BLOCKED",
@@ -865,7 +884,7 @@ mod tests {
                 ),
                 action: "warn",
                 checkpoint_dir: None,
-            }),
+            })),
         );
 
         assert_eq!(payload["phase"], Value::String("TASK_BLOCKED".into()));
@@ -902,7 +921,7 @@ mod tests {
             &healthy_monitor(timestamp),
             &target,
             timestamp,
-            Some(&AlertNotification {
+            &executed_decision(Some(AlertNotification {
                 timestamp,
                 previous_phase: None,
                 phase: "DEAD",
@@ -910,7 +929,7 @@ mod tests {
                 suggestion: Some("restart the Claude process to resume monitoring"),
                 action: "kill",
                 checkpoint_dir: None,
-            }),
+            })),
         );
 
         assert_eq!(payload["phase"], Value::String("DEAD".into()));
@@ -1068,6 +1087,19 @@ mod tests {
             last_runtime_heartbeat_at: timestamp,
             last_stream_heartbeat_at: None,
             last_process_heartbeat_at: None,
+        }
+    }
+
+    fn executed_decision(notification: Option<AlertNotification>) -> AlertPolicyDecision {
+        AlertPolicyDecision {
+            state: AlertDecisionState::Executed,
+            action: notification
+                .as_ref()
+                .map(|value| value.action)
+                .unwrap_or("none"),
+            reason: "executed",
+            explanation: "action executed for test payload".into(),
+            notification,
         }
     }
 

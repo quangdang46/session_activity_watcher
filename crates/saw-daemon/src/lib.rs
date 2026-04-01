@@ -8,8 +8,9 @@ pub mod store;
 pub mod watcher;
 
 pub use alerter::{
-    alert_log_path, AlertActionExecutor, AlertContext, AlertNotification, Alerter, AlerterConfig,
-    ScopeLeakAction, StuckAction, DEFAULT_ALERT_RATE_LIMIT,
+    alert_log_path, AlertActionExecutor, AlertContext, AlertDecisionState, AlertNotification,
+    AlertPolicyDecision, Alerter, AlerterConfig, ScopeLeakAction, StuckAction,
+    DEFAULT_ALERT_RATE_LIMIT,
 };
 pub use event_bus::{EventBus, EventBusMetrics, Receiver, EVENT_BUS_CAPACITY};
 pub use jsonl_tail::{

@@ -53,6 +53,13 @@ pub struct Alerter {
     last_action_at: HashMap<&'static str, DateTime<Utc>>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AlertDecisionState {
+    Executed,
+    Skipped,
+    Gated,
+}
+
 #[derive(Debug)]
 pub struct AlertContext<'a> {
     pub timestamp: DateTime<Utc>,
@@ -70,6 +77,25 @@ pub struct AlertNotification {
     pub suggestion: Option<&'static str>,
     pub action: &'static str,
     pub checkpoint_dir: Option<PathBuf>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AlertPolicyDecision {
+    pub state: AlertDecisionState,
+    pub action: &'static str,
+    pub reason: &'static str,
+    pub explanation: String,
+    pub notification: Option<AlertNotification>,
+}
+
+enum ActionExecution {
+    Executed {
+        checkpoint_dir: Option<PathBuf>,
+    },
+    Gated {
+        reason: &'static str,
+        explanation: String,
+    },
 }
 
 pub trait AlertActionExecutor {
@@ -94,6 +120,91 @@ impl Alerter {
         !self.config.quiet || alert.is_some()
     }
 
+    pub fn evaluate_phase_change<E: AlertActionExecutor>(
+        &mut self,
+        from: Option<&AgentPhase>,
+        to: &AgentPhase,
+        context: AlertContext<'_>,
+        executor: &mut E,
+    ) -> Result<AlertPolicyDecision> {
+        let action = configured_action(&self.config, to);
+
+        if !is_alert_phase(to) {
+            return Ok(AlertPolicyDecision {
+                state: AlertDecisionState::Skipped,
+                action: "none",
+                reason: "not_alert_phase",
+                explanation: format!(
+                    "phase {} does not trigger an automated watcher action",
+                    phase_label(to)
+                ),
+                notification: None,
+            });
+        }
+
+        if !is_new_alert(from, to) {
+            return Ok(AlertPolicyDecision {
+                state: AlertDecisionState::Skipped,
+                action,
+                reason: "no_new_alert",
+                explanation: format!(
+                    "phase {} did not transition into a new alert condition",
+                    phase_label(to)
+                ),
+                notification: None,
+            });
+        }
+
+        if self.is_rate_limited(action, context.timestamp) {
+            return Ok(AlertPolicyDecision {
+                state: AlertDecisionState::Gated,
+                action,
+                reason: "rate_limited",
+                explanation: format!(
+                    "action {action} suppressed by {}s rate limit",
+                    self.config.rate_limit.as_secs()
+                ),
+                notification: None,
+            });
+        }
+
+        match self.execute_action(to, &context, executor)? {
+            ActionExecution::Executed { checkpoint_dir } => {
+                let notification = AlertNotification {
+                    timestamp: context.timestamp,
+                    previous_phase: from.map(phase_label),
+                    phase: phase_label(to),
+                    message: alert_message(to, context.cwd),
+                    suggestion: alert_suggestion(to),
+                    action,
+                    checkpoint_dir,
+                };
+
+                self.emit_action_message(executor, &notification)?;
+                self.append_alert_log(context.cwd, &notification)?;
+                self.last_action_at.insert(action, context.timestamp);
+
+                Ok(AlertPolicyDecision {
+                    state: AlertDecisionState::Executed,
+                    action,
+                    reason: "executed",
+                    explanation: format!("action {action} executed for {}", phase_label(to)),
+                    notification: Some(notification),
+                })
+            }
+            ActionExecution::Gated {
+                reason,
+                explanation,
+            } => Ok(AlertPolicyDecision {
+                state: AlertDecisionState::Gated,
+                action,
+                reason,
+                explanation,
+                notification: None,
+            }),
+        }
+    }
+
     pub fn on_phase_change<E: AlertActionExecutor>(
         &mut self,
         from: Option<&AgentPhase>,
@@ -101,31 +212,9 @@ impl Alerter {
         context: AlertContext<'_>,
         executor: &mut E,
     ) -> Result<Option<AlertNotification>> {
-        if !is_new_alert(from, to) {
-            return Ok(None);
-        }
-
-        let action = configured_action(&self.config, to);
-        if self.is_rate_limited(action, context.timestamp) {
-            return Ok(None);
-        }
-
-        let checkpoint_dir = self.execute_action(to, &context, executor)?;
-        let notification = AlertNotification {
-            timestamp: context.timestamp,
-            previous_phase: from.map(phase_label),
-            phase: phase_label(to),
-            message: alert_message(to, context.cwd),
-            suggestion: alert_suggestion(to),
-            action,
-            checkpoint_dir,
-        };
-
-        self.emit_action_message(executor, &notification)?;
-        self.append_alert_log(context.cwd, &notification)?;
-        self.last_action_at.insert(action, context.timestamp);
-
-        Ok(Some(notification))
+        Ok(self
+            .evaluate_phase_change(from, to, context, executor)?
+            .notification)
     }
 
     fn is_rate_limited(&self, action: &'static str, now: DateTime<Utc>) -> bool {
@@ -141,7 +230,7 @@ impl Alerter {
         phase: &AgentPhase,
         context: &AlertContext<'_>,
         executor: &mut E,
-    ) -> Result<Option<PathBuf>> {
+    ) -> Result<ActionExecution> {
         match phase {
             AgentPhase::ApiHang(_) | AgentPhase::ToolLoop { .. } | AgentPhase::TestLoop { .. } => {
                 let checkpoint_dir = if self.config.checkpoint_before_action {
@@ -150,12 +239,19 @@ impl Alerter {
                     None
                 };
                 match self.config.stuck_action {
-                    StuckAction::Warn | StuckAction::Bell => Ok(checkpoint_dir),
+                    StuckAction::Warn | StuckAction::Bell => {
+                        Ok(ActionExecution::Executed { checkpoint_dir })
+                    }
                     StuckAction::Kill => {
                         if let Some(pid) = context.pid {
                             executor.interrupt_pid(pid)?;
+                            Ok(ActionExecution::Executed { checkpoint_dir })
+                        } else {
+                            Ok(ActionExecution::Gated {
+                                reason: "missing_pid",
+                                explanation: "configured interrupt action skipped because the watcher has no live pid to signal".to_string(),
+                            })
                         }
-                        Ok(checkpoint_dir)
                     }
                     StuckAction::CheckpointKill => {
                         let checkpoint_dir = match checkpoint_dir {
@@ -164,37 +260,78 @@ impl Alerter {
                         };
                         if let Some(pid) = context.pid {
                             executor.interrupt_pid(pid)?;
+                            Ok(ActionExecution::Executed {
+                                checkpoint_dir: Some(checkpoint_dir),
+                            })
+                        } else {
+                            Ok(ActionExecution::Gated {
+                                reason: "missing_pid",
+                                explanation: format!(
+                                    "checkpoint saved at {} but interrupt skipped because the watcher has no live pid to signal",
+                                    checkpoint_dir.display()
+                                ),
+                            })
                         }
-                        Ok(Some(checkpoint_dir))
                     }
                 }
             }
-            AgentPhase::TaskBlocked { .. } | AgentPhase::ContextReset => Ok(None),
+            AgentPhase::TaskBlocked { .. } | AgentPhase::ContextReset => {
+                Ok(ActionExecution::Executed {
+                    checkpoint_dir: None,
+                })
+            }
             AgentPhase::ScopeLeaking { .. } => match self.config.scope_leak_action {
-                ScopeLeakAction::Warn | ScopeLeakAction::Bell => Ok(None),
+                ScopeLeakAction::Warn | ScopeLeakAction::Bell => Ok(ActionExecution::Executed {
+                    checkpoint_dir: None,
+                }),
                 ScopeLeakAction::Kill => {
                     if let Some(pid) = context.pid {
                         executor.interrupt_pid(pid)?;
+                        Ok(ActionExecution::Executed {
+                            checkpoint_dir: None,
+                        })
+                    } else {
+                        Ok(ActionExecution::Gated {
+                            reason: "missing_pid",
+                            explanation: "configured scope-leak interrupt skipped because the watcher has no live pid to signal".to_string(),
+                        })
                     }
-                    Ok(None)
                 }
             },
             AgentPhase::Dead => match self.config.stuck_action {
-                StuckAction::Warn | StuckAction::Bell => Ok(None),
+                StuckAction::Warn | StuckAction::Bell => Ok(ActionExecution::Executed {
+                    checkpoint_dir: None,
+                }),
                 StuckAction::Kill => {
                     if let Some(pid) = context.pid {
                         let _ = executor.force_kill_pid(pid);
+                        Ok(ActionExecution::Executed {
+                            checkpoint_dir: None,
+                        })
+                    } else {
+                        Ok(ActionExecution::Gated {
+                            reason: "missing_pid",
+                            explanation: "force-kill skipped because the watcher has no pid for the exited process".to_string(),
+                        })
                     }
-                    Ok(None)
                 }
                 StuckAction::CheckpointKill => {
                     if let Some(pid) = context.pid {
                         let _ = executor.force_kill_pid(pid);
+                        Ok(ActionExecution::Executed {
+                            checkpoint_dir: None,
+                        })
+                    } else {
+                        Ok(ActionExecution::Gated {
+                            reason: "missing_pid",
+                            explanation: "checkpoint-kill skipped because the watcher has no pid for the exited process".to_string(),
+                        })
                     }
-                    Ok(None)
                 }
             },
-            _ => Ok(None),
+            _ => Ok(ActionExecution::Executed {
+                checkpoint_dir: None,
+            }),
         }
     }
 
@@ -439,8 +576,8 @@ fn format_timestamp(timestamp: DateTime<Utc>) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        alert_log_path, AlertActionExecutor, AlertContext, AlertNotification, Alerter,
-        AlerterConfig, ScopeLeakAction, StuckAction,
+        alert_log_path, AlertActionExecutor, AlertContext, AlertDecisionState, AlertNotification,
+        Alerter, AlerterConfig, ScopeLeakAction, StuckAction,
     };
     use chrono::{Duration as ChronoDuration, TimeZone, Utc};
     use saw_core::{AgentPhase, AgentState};
@@ -657,6 +794,90 @@ mod tests {
             )
             .unwrap();
         assert!(second.is_some());
+    }
+
+    #[test]
+    fn policy_decision_reports_executed_action() {
+        let cwd = unique_temp_dir("policy-executed");
+        let state = AgentState::default();
+        let mut alerter = Alerter::new(AlerterConfig::default());
+        let mut executor = MockExecutor::default();
+
+        let decision = alerter
+            .evaluate_phase_change(
+                None,
+                &AgentPhase::ApiHang(Duration::from_secs(121)),
+                AlertContext {
+                    timestamp: ts(0),
+                    cwd: &cwd,
+                    state: &state,
+                    pid: Some(4242),
+                },
+                &mut executor,
+            )
+            .unwrap();
+
+        assert_eq!(decision.state, AlertDecisionState::Executed);
+        assert_eq!(decision.reason, "executed");
+        assert_eq!(decision.action, "warn");
+        assert!(decision.notification.is_some());
+    }
+
+    #[test]
+    fn policy_decision_reports_skipped_action() {
+        let cwd = unique_temp_dir("policy-skipped");
+        let state = AgentState::default();
+        let mut alerter = Alerter::new(AlerterConfig::default());
+        let mut executor = MockExecutor::default();
+        let phase = AgentPhase::ApiHang(Duration::from_secs(121));
+
+        let decision = alerter
+            .evaluate_phase_change(
+                Some(&phase),
+                &phase,
+                AlertContext {
+                    timestamp: ts(0),
+                    cwd: &cwd,
+                    state: &state,
+                    pid: Some(4242),
+                },
+                &mut executor,
+            )
+            .unwrap();
+
+        assert_eq!(decision.state, AlertDecisionState::Skipped);
+        assert_eq!(decision.reason, "no_new_alert");
+        assert!(decision.notification.is_none());
+    }
+
+    #[test]
+    fn policy_decision_reports_gated_action() {
+        let cwd = unique_temp_dir("policy-gated");
+        let state = AgentState::default();
+        let mut alerter = Alerter::new(AlerterConfig {
+            stuck_action: StuckAction::Kill,
+            ..AlerterConfig::default()
+        });
+        let mut executor = MockExecutor::default();
+
+        let decision = alerter
+            .evaluate_phase_change(
+                None,
+                &AgentPhase::ApiHang(Duration::from_secs(121)),
+                AlertContext {
+                    timestamp: ts(0),
+                    cwd: &cwd,
+                    state: &state,
+                    pid: None,
+                },
+                &mut executor,
+            )
+            .unwrap();
+
+        assert_eq!(decision.state, AlertDecisionState::Gated);
+        assert_eq!(decision.reason, "missing_pid");
+        assert_eq!(decision.action, "kill");
+        assert!(decision.notification.is_none());
     }
 
     #[test]
