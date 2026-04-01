@@ -882,10 +882,7 @@ mod tests {
             AgentEvent::SessionStart { session_id, .. } => {
                 assert_eq!(session_id, expected_session_id)
             }
-            other => assert!(
-                false,
-                "unexpected event while waiting for session_start: {other:?}"
-            ),
+            other => panic!("unexpected event while waiting for session_start: {other:?}"),
         }
     }
 

@@ -344,6 +344,7 @@ fn status_payload(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn print_human_status(
     previous_phase: Option<&AgentPhase>,
     phase: &AgentPhase,
