@@ -11,9 +11,9 @@ use clap::{Args, ValueEnum};
 use saw_core::{compute_silence, AgentPhase, AgentState, ClassifierConfig};
 use saw_daemon::{
     AlertActionExecutor, AlertContext, AlertNotification, Alerter, AlerterConfig,
-    RuntimeStateRefresher, ScopeLeakAction as DaemonScopeLeakAction,
-    StuckAction as DaemonStuckAction, WatcherRuntime, WatcherRuntimeOptions, WatcherRuntimeTarget,
-    DEFAULT_ALERT_RATE_LIMIT,
+    RuntimeConnectionState, RuntimeMonitorSnapshot, RuntimeStateRefresher,
+    ScopeLeakAction as DaemonScopeLeakAction, StuckAction as DaemonStuckAction, WatcherRuntime,
+    WatcherRuntimeOptions, WatcherRuntimeTarget, DEFAULT_ALERT_RATE_LIMIT,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -134,6 +134,7 @@ async fn run_async(args: WatchArgs) -> Result<()> {
     let target = runtime.target().clone();
     let initial = runtime.initial_update();
     let mut state = initial.state.clone();
+    let mut monitor = initial.monitor.clone();
     let mut alerter = Alerter::new(AlerterConfig {
         stuck_action: map_stuck_action(on_stuck),
         scope_leak_action: map_scope_leak_action(args.on_scope_leak),
@@ -161,6 +162,7 @@ async fn run_async(args: WatchArgs) -> Result<()> {
         None,
         &current_phase,
         &state,
+        &monitor,
         &target,
         &args,
         initial_timestamp,
@@ -184,6 +186,7 @@ async fn run_async(args: WatchArgs) -> Result<()> {
                 Some(update) => {
                     let timestamp = update.timestamp;
                     state = update.state.clone();
+                    monitor = update.monitor.clone();
                     let phase = update.phase.clone();
                     let alert = alerter.on_phase_change(
                         previous_phase.as_ref(),
@@ -200,6 +203,7 @@ async fn run_async(args: WatchArgs) -> Result<()> {
                         previous_phase.as_ref(),
                         &phase,
                         &state,
+                        &monitor,
                         &target,
                         &args,
                         timestamp,
@@ -252,6 +256,7 @@ fn emit_status(
     previous_phase: Option<&AgentPhase>,
     phase: &AgentPhase,
     state: &AgentState,
+    monitor: &RuntimeMonitorSnapshot,
     target: &WatchTarget,
     args: &WatchArgs,
     timestamp: DateTime<Utc>,
@@ -273,13 +278,23 @@ fn emit_status(
                 previous_phase,
                 phase,
                 state,
+                monitor,
                 target,
                 timestamp,
                 alert,
             ))?
         );
     } else {
-        print_human_status(previous_phase, phase, state, target, args, timestamp, alert);
+        print_human_status(
+            previous_phase,
+            phase,
+            state,
+            monitor,
+            target,
+            args,
+            timestamp,
+            alert,
+        );
     }
     std::io::stdout().flush()?;
 
@@ -290,6 +305,7 @@ fn status_payload(
     previous_phase: Option<&AgentPhase>,
     phase: &AgentPhase,
     state: &AgentState,
+    monitor: &RuntimeMonitorSnapshot,
     target: &WatchTarget,
     timestamp: DateTime<Utc>,
     alert: Option<&AlertNotification>,
@@ -309,6 +325,12 @@ fn status_payload(
         "silence_secs": compute_silence(state, timestamp).as_secs(),
         "cpu_percent": state.latest_cpu_percent,
         "source": target.jsonl_path.display().to_string(),
+        "runtime_state": runtime_state_label(&monitor.connection_state),
+        "runtime_reason": runtime_reason_label(&monitor.connection_state),
+        "runtime_retry_attempt": runtime_retry_attempt(&monitor.connection_state),
+        "runtime_retry_secs": runtime_retry_secs(&monitor.connection_state),
+        "stream_heartbeat_secs": heartbeat_age_secs(monitor.last_stream_heartbeat_at, timestamp),
+        "process_heartbeat_secs": heartbeat_age_secs(monitor.last_process_heartbeat_at, timestamp),
         "suggestion": alert.and_then(|value| value.suggestion),
         "details": phase_details(phase, state, &target.cwd, timestamp),
     })
@@ -318,6 +340,7 @@ fn print_human_status(
     previous_phase: Option<&AgentPhase>,
     phase: &AgentPhase,
     state: &AgentState,
+    monitor: &RuntimeMonitorSnapshot,
     target: &WatchTarget,
     args: &WatchArgs,
     timestamp: DateTime<Utc>,
@@ -344,7 +367,7 @@ fn print_human_status(
         .unwrap_or_default();
 
     println!(
-        "{} {} {}{} pid={} file={} silence={}s cpu={:.1}% session={} source={}",
+        "{} {} {}{} pid={} file={} silence={}s cpu={:.1}% runtime={} session={} source={}",
         format_timestamp(timestamp),
         prefix,
         phase_display,
@@ -360,6 +383,7 @@ fn print_human_status(
             .unwrap_or_else(|| "-".to_string()),
         compute_silence(state, timestamp).as_secs(),
         state.latest_cpu_percent,
+        runtime_summary(monitor, timestamp),
         state
             .session_id
             .as_deref()
@@ -519,6 +543,79 @@ fn phase_kind_changed(previous_phase: Option<&AgentPhase>, phase: &AgentPhase) -
         .unwrap_or(false)
 }
 
+fn runtime_state_label(state: &RuntimeConnectionState) -> &'static str {
+    match state {
+        RuntimeConnectionState::Healthy => "healthy",
+        RuntimeConnectionState::Polling { .. } => "polling",
+        RuntimeConnectionState::Reconnecting { .. } => "reconnecting",
+        RuntimeConnectionState::SleepWakeRecovery { .. } => "sleep_wake_recovery",
+        RuntimeConnectionState::Fatal { .. } => "fatal",
+    }
+}
+
+fn runtime_reason_label(state: &RuntimeConnectionState) -> Option<&'static str> {
+    match state {
+        RuntimeConnectionState::Healthy => None,
+        RuntimeConnectionState::Polling { reason } => Some(match reason {
+            saw_daemon::RuntimePollingReason::ForcePoll => "force_poll",
+            saw_daemon::RuntimePollingReason::NotifyInactive => "notify_inactive",
+            saw_daemon::RuntimePollingReason::SleepWakeRecovery => "sleep_wake_recovery",
+        }),
+        RuntimeConnectionState::Reconnecting { reason, .. } => Some(match reason {
+            saw_daemon::RuntimeReconnectReason::SourceMissing => "source_missing",
+            saw_daemon::RuntimeReconnectReason::ActiveFileMissing => "active_file_missing",
+        }),
+        RuntimeConnectionState::SleepWakeRecovery { .. } => Some("sleep_wake_recovery"),
+        RuntimeConnectionState::Fatal { reason } => Some(match reason {
+            saw_daemon::RuntimeFatalReason::ProcessExited => "process_exited",
+            saw_daemon::RuntimeFatalReason::TailerExited => "tailer_exited",
+            saw_daemon::RuntimeFatalReason::TailerFailed => "tailer_failed",
+        }),
+    }
+}
+
+fn runtime_retry_attempt(state: &RuntimeConnectionState) -> Option<u32> {
+    match state {
+        RuntimeConnectionState::Reconnecting { attempt, .. } => Some(*attempt),
+        _ => None,
+    }
+}
+
+fn runtime_retry_secs(state: &RuntimeConnectionState) -> Option<u64> {
+    match state {
+        RuntimeConnectionState::Reconnecting { next_retry_in, .. } => Some(next_retry_in.as_secs()),
+        RuntimeConnectionState::SleepWakeRecovery { observed_gap } => Some(observed_gap.as_secs()),
+        _ => None,
+    }
+}
+
+fn heartbeat_age_secs(last_heartbeat: Option<DateTime<Utc>>, now: DateTime<Utc>) -> Option<u64> {
+    last_heartbeat.map(|heartbeat| {
+        now.signed_duration_since(heartbeat)
+            .to_std()
+            .unwrap_or_default()
+            .as_secs()
+    })
+}
+
+fn runtime_summary(monitor: &RuntimeMonitorSnapshot, timestamp: DateTime<Utc>) -> String {
+    let state = runtime_state_label(&monitor.connection_state);
+    let reason = runtime_reason_label(&monitor.connection_state)
+        .map(|value| format!(":{value}"))
+        .unwrap_or_default();
+    let process_heartbeat = heartbeat_age_secs(monitor.last_process_heartbeat_at, timestamp)
+        .map(|value| format!(" proc={}s", value))
+        .unwrap_or_default();
+    let stream_heartbeat = heartbeat_age_secs(monitor.last_stream_heartbeat_at, timestamp)
+        .map(|value| format!(" stream={}s", value))
+        .unwrap_or_default();
+    let retry = runtime_retry_attempt(&monitor.connection_state)
+        .map(|attempt| format!(" retry={attempt}"))
+        .unwrap_or_default();
+
+    format!("{state}{reason}{retry}{process_heartbeat}{stream_heartbeat}")
+}
+
 fn format_timestamp(timestamp: DateTime<Utc>) -> String {
     timestamp.to_rfc3339_opts(SecondsFormat::Secs, true)
 }
@@ -548,7 +645,9 @@ mod tests {
     use crate::cmd::common::home_env_test_lock;
     use chrono::{TimeZone, Utc};
     use saw_core::{classify, AgentPhase, ClassifierConfig};
-    use saw_daemon::StuckAction as DaemonStuckAction;
+    use saw_daemon::{
+        RuntimeConnectionState, RuntimeMonitorSnapshot, StuckAction as DaemonStuckAction,
+    };
     use serde_json::Value;
     use std::ffi::OsString;
     use std::fs;
@@ -706,6 +805,7 @@ mod tests {
             Some(&AgentPhase::Thinking),
             &AgentPhase::ApiHang(Duration::from_secs(121)),
             &state,
+            &healthy_monitor(fixed_timestamp()),
             &target,
             fixed_timestamp(),
             Some(&AlertNotification {
@@ -752,6 +852,7 @@ mod tests {
                 blocked_by: vec!["2".into(), "4".into()],
             },
             &state,
+            &healthy_monitor(timestamp),
             &target,
             timestamp,
             Some(&AlertNotification {
@@ -798,6 +899,7 @@ mod tests {
             None,
             &AgentPhase::Dead,
             &state,
+            &healthy_monitor(timestamp),
             &target,
             timestamp,
             Some(&AlertNotification {
@@ -958,6 +1060,15 @@ mod tests {
         Utc.with_ymd_and_hms(2026, 3, 24, 12, 11, 22)
             .single()
             .unwrap()
+    }
+
+    fn healthy_monitor(timestamp: chrono::DateTime<Utc>) -> RuntimeMonitorSnapshot {
+        RuntimeMonitorSnapshot {
+            connection_state: RuntimeConnectionState::Healthy,
+            last_runtime_heartbeat_at: timestamp,
+            last_stream_heartbeat_at: None,
+            last_process_heartbeat_at: None,
+        }
     }
 
     fn write_session_fixture(

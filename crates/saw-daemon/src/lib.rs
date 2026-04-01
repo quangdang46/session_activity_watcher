@@ -13,14 +13,17 @@ pub use alerter::{
 };
 pub use event_bus::{EventBus, EventBusMetrics, Receiver, EVENT_BUS_CAPACITY};
 pub use jsonl_tail::{
-    JsonlTailMode, JsonlTailer, JsonlTailerOptions, JSONL_TAIL_FALLBACK_POLL_INTERVAL,
-    JSONL_TAIL_NOTIFY_IDLE_TIMEOUT, JSONL_TAIL_POLL_INTERVAL,
+    JsonlTailConnectionState, JsonlTailFatalReason, JsonlTailMode, JsonlTailPollingReason,
+    JsonlTailRetryReason, JsonlTailStatus, JsonlTailer, JsonlTailerOptions,
+    JSONL_TAIL_FALLBACK_POLL_INTERVAL, JSONL_TAIL_NOTIFY_IDLE_TIMEOUT, JSONL_TAIL_POLL_INTERVAL,
+    JSONL_TAIL_SLEEP_WAKE_THRESHOLD,
 };
 pub use process_monitor::{ProcessMonitor, DEFAULT_PROCESS_POLL_INTERVAL};
 pub use runtime::{
     list_alive_session_selections, resolve_watch_target, sessions_for_cwd,
-    NoopRuntimeStateRefresher, RuntimeStateRefresher, RuntimeUpdate, SessionFile, SessionSelection,
-    WatcherRuntime, WatcherRuntimeOptions, WatcherRuntimeTarget,
+    NoopRuntimeStateRefresher, RuntimeConnectionState, RuntimeFatalReason, RuntimeMonitorSnapshot,
+    RuntimePollingReason, RuntimeReconnectReason, RuntimeStateRefresher, RuntimeUpdate,
+    SessionFile, SessionSelection, WatcherRuntime, WatcherRuntimeOptions, WatcherRuntimeTarget,
 };
 pub use state_machine::StateMachine;
 pub use store::{SessionSummary, Store};

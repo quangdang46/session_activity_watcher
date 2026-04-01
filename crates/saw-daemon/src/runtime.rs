@@ -15,7 +15,9 @@ use tokio::sync::{broadcast, mpsc};
 use tokio::task::JoinHandle;
 
 use crate::{
-    EventBus, FileWatcher, JsonlTailer, JsonlTailerOptions, ProcessMonitor, Receiver, StateMachine,
+    EventBus, FileWatcher, JsonlTailConnectionState, JsonlTailFatalReason, JsonlTailPollingReason,
+    JsonlTailRetryReason, JsonlTailStatus, JsonlTailer, JsonlTailerOptions, ProcessMonitor,
+    Receiver, StateMachine,
 };
 
 #[derive(Debug, Clone)]
@@ -70,6 +72,7 @@ pub struct RuntimeUpdate {
     pub previous_phase: Option<AgentPhase>,
     pub phase: AgentPhase,
     pub state: AgentState,
+    pub monitor: RuntimeMonitorSnapshot,
     pub target: WatcherRuntimeTarget,
 }
 
@@ -95,12 +98,159 @@ impl RuntimeStateRefresher for NoopRuntimeStateRefresher {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RuntimePollingReason {
+    ForcePoll,
+    NotifyInactive,
+    SleepWakeRecovery,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RuntimeReconnectReason {
+    SourceMissing,
+    ActiveFileMissing,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RuntimeFatalReason {
+    ProcessExited,
+    TailerExited,
+    TailerFailed,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RuntimeConnectionState {
+    Healthy,
+    Polling {
+        reason: RuntimePollingReason,
+    },
+    Reconnecting {
+        reason: RuntimeReconnectReason,
+        attempt: u32,
+        next_retry_in: std::time::Duration,
+    },
+    SleepWakeRecovery {
+        observed_gap: std::time::Duration,
+    },
+    Fatal {
+        reason: RuntimeFatalReason,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RuntimeMonitorSnapshot {
+    pub connection_state: RuntimeConnectionState,
+    pub last_runtime_heartbeat_at: DateTime<Utc>,
+    pub last_stream_heartbeat_at: Option<DateTime<Utc>>,
+    pub last_process_heartbeat_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Clone)]
+struct RuntimeMonitor {
+    snapshot: RuntimeMonitorSnapshot,
+}
+
+impl RuntimeMonitor {
+    fn new(observed_at: DateTime<Utc>) -> Self {
+        Self {
+            snapshot: RuntimeMonitorSnapshot {
+                connection_state: RuntimeConnectionState::Healthy,
+                last_runtime_heartbeat_at: observed_at,
+                last_stream_heartbeat_at: None,
+                last_process_heartbeat_at: None,
+            },
+        }
+    }
+
+    fn snapshot(&self) -> RuntimeMonitorSnapshot {
+        self.snapshot.clone()
+    }
+
+    fn observe_event(&mut self, event: &AgentEvent) {
+        let timestamp = event.timestamp();
+        self.snapshot.last_runtime_heartbeat_at = timestamp;
+
+        match event {
+            AgentEvent::ProcessMetrics(metrics) => {
+                self.snapshot.last_process_heartbeat_at = Some(metrics.timestamp);
+                if metrics.process_alive {
+                    if matches!(
+                        self.snapshot.connection_state,
+                        RuntimeConnectionState::Fatal {
+                            reason: RuntimeFatalReason::ProcessExited
+                        }
+                    ) {
+                        self.snapshot.connection_state = RuntimeConnectionState::Healthy;
+                    }
+                } else {
+                    self.snapshot.connection_state = RuntimeConnectionState::Fatal {
+                        reason: RuntimeFatalReason::ProcessExited,
+                    };
+                }
+            }
+            _ => {
+                self.snapshot.last_stream_heartbeat_at = Some(timestamp);
+            }
+        }
+    }
+
+    fn observe_tail_status(&mut self, status: &JsonlTailStatus) -> bool {
+        self.snapshot.last_runtime_heartbeat_at = status.observed_at;
+        let next_state = runtime_state_from_tail_status(status);
+        let changed = self.snapshot.connection_state != next_state;
+        self.snapshot.connection_state = next_state;
+        changed
+    }
+}
+
+fn runtime_state_from_tail_status(status: &JsonlTailStatus) -> RuntimeConnectionState {
+    match &status.state {
+        JsonlTailConnectionState::Healthy => RuntimeConnectionState::Healthy,
+        JsonlTailConnectionState::Polling { reason } => RuntimeConnectionState::Polling {
+            reason: match reason {
+                JsonlTailPollingReason::ForcePoll => RuntimePollingReason::ForcePoll,
+                JsonlTailPollingReason::NotifyInactive => RuntimePollingReason::NotifyInactive,
+                JsonlTailPollingReason::SleepWakeRecovery => {
+                    RuntimePollingReason::SleepWakeRecovery
+                }
+            },
+        },
+        JsonlTailConnectionState::Retrying {
+            reason,
+            attempt,
+            next_retry_in,
+        } => RuntimeConnectionState::Reconnecting {
+            reason: match reason {
+                JsonlTailRetryReason::SourceMissing => RuntimeReconnectReason::SourceMissing,
+                JsonlTailRetryReason::ActiveFileMissing => {
+                    RuntimeReconnectReason::ActiveFileMissing
+                }
+            },
+            attempt: *attempt,
+            next_retry_in: *next_retry_in,
+        },
+        JsonlTailConnectionState::SleepWakeRecovery { observed_gap } => {
+            RuntimeConnectionState::SleepWakeRecovery {
+                observed_gap: *observed_gap,
+            }
+        }
+        JsonlTailConnectionState::Fatal { reason } => RuntimeConnectionState::Fatal {
+            reason: match reason {
+                JsonlTailFatalReason::Exited => RuntimeFatalReason::TailerExited,
+                JsonlTailFatalReason::Failed => RuntimeFatalReason::TailerFailed,
+            },
+        },
+    }
+}
+
 pub struct WatcherRuntime {
     target: WatcherRuntimeTarget,
     state_machine: StateMachine,
     event_receiver: Receiver<AgentEvent>,
+    tail_status_receiver: Option<mpsc::UnboundedReceiver<JsonlTailStatus>>,
     update_sender: broadcast::Sender<RuntimeUpdate>,
     refresher: Arc<dyn RuntimeStateRefresher>,
+    monitor: RuntimeMonitor,
     last_timestamp: DateTime<Utc>,
     tail_bridge: Option<JoinHandle<()>>,
     tailer_task: Option<JoinHandle<Result<()>>>,
@@ -123,6 +273,7 @@ impl WatcherRuntime {
         let bus = EventBus::new();
         let event_receiver = bus.subscribe();
         let (update_sender, _) = broadcast::channel(64);
+        let (tail_status_sender, tail_status_receiver) = mpsc::unbounded_channel();
 
         let (tail_tx, mut tail_rx) = mpsc::channel(256);
         let tail_bus = bus.clone();
@@ -136,7 +287,23 @@ impl WatcherRuntime {
             JsonlTailer::with_options(&target.jsonl_path, tailer_options(&options, target.pid))
                 .with_context(|| format!("failed to watch {}", target.jsonl_path.display()))?;
         tailer.set_byte_offset(current_offset(&target.jsonl_path));
-        let tailer_task = tokio::spawn(async move { tailer.run(tail_tx).await });
+        let tailer_task = tokio::spawn(async move {
+            let result = tailer
+                .run_with_status(tail_tx, Some(tail_status_sender.clone()))
+                .await;
+            let _ = tail_status_sender.send(JsonlTailStatus {
+                observed_at: Utc::now(),
+                state: JsonlTailConnectionState::Fatal {
+                    reason: if result.is_ok() {
+                        JsonlTailFatalReason::Exited
+                    } else {
+                        JsonlTailFatalReason::Failed
+                    },
+                },
+                active_path: Some(tailer.active_path().to_path_buf()),
+            });
+            result
+        });
 
         let monitor_task = target.pid.map(|pid| {
             let monitor_bus = bus.clone();
@@ -160,8 +327,10 @@ impl WatcherRuntime {
             target,
             state_machine,
             event_receiver,
+            tail_status_receiver: Some(tail_status_receiver),
             update_sender,
             refresher,
+            monitor: RuntimeMonitor::new(now),
             last_timestamp: now,
             tail_bridge: Some(tail_bridge),
             tailer_task: Some(tailer_task),
@@ -182,6 +351,7 @@ impl WatcherRuntime {
             previous_phase: None,
             phase: self.state_machine.state().phase.clone(),
             state: self.state_machine.state().clone(),
+            monitor: self.monitor.snapshot(),
             target: self.target.clone(),
         }
     }
@@ -199,9 +369,38 @@ impl WatcherRuntime {
             return Ok(None);
         }
 
-        match self.event_receiver.recv().await {
-            Ok(event) => {
+        loop {
+            tokio::select! {
+                maybe_status = async {
+                    match self.tail_status_receiver.as_mut() {
+                        Some(receiver) => receiver.recv().await,
+                        None => None,
+                    }
+                }, if self.tail_status_receiver.is_some() => {
+                    let Some(status) = maybe_status else {
+                        self.tail_status_receiver = None;
+                        continue;
+                    };
+                    if !self.monitor.observe_tail_status(&status) {
+                        continue;
+                    }
+                    let phase = self.state_machine.state().phase.clone();
+                    let update = RuntimeUpdate {
+                        timestamp: status.observed_at,
+                        event: None,
+                        previous_phase: Some(phase.clone()),
+                        phase,
+                        state: self.state_machine.state().clone(),
+                        monitor: self.monitor.snapshot(),
+                        target: self.target.clone(),
+                    };
+                    let _ = self.update_sender.send(update.clone());
+                    return Ok(Some(update));
+                }
+                event = self.event_receiver.recv() => match event {
+                    Ok(event) => {
                 let timestamp = event.timestamp();
+                self.monitor.observe_event(&event);
                 let previous_phase = self.state_machine.state().phase.clone();
                 self.state_machine.state_mut().apply(&event);
                 if !matches!(event, AgentEvent::ProcessMetrics(_)) {
@@ -217,12 +416,15 @@ impl WatcherRuntime {
                     previous_phase: Some(previous_phase),
                     phase: self.state_machine.state().phase.clone(),
                     state: self.state_machine.state().clone(),
+                    monitor: self.monitor.snapshot(),
                     target: self.target.clone(),
                 };
                 let _ = self.update_sender.send(update.clone());
-                Ok(Some(update))
+                        return Ok(Some(update));
+                    }
+                    Err(_) => return Ok(None),
+                }
             }
-            Err(_) => Ok(None),
         }
     }
 
@@ -555,8 +757,13 @@ fn tailer_options(options: &WatcherRuntimeOptions, process_pid: Option<u32>) -> 
 
 #[cfg(test)]
 mod tests {
-    use super::{NoopRuntimeStateRefresher, WatcherRuntime, WatcherRuntimeOptions};
-    use saw_core::{AgentEvent, AgentPhase, ClassifierConfig};
+    use super::{
+        NoopRuntimeStateRefresher, RuntimeConnectionState, RuntimeFatalReason, RuntimeMonitor,
+        RuntimeReconnectReason, WatcherRuntime, WatcherRuntimeOptions,
+    };
+    use crate::{JsonlTailConnectionState, JsonlTailStatus};
+    use chrono::{Duration as ChronoDuration, TimeZone, Utc};
+    use saw_core::{AgentEvent, AgentPhase, ClassifierConfig, ProcessMetrics};
     use std::fs;
     use std::path::{Path, PathBuf};
     use std::process::{Child, Command, Stdio};
@@ -572,6 +779,13 @@ mod tests {
         let path = std::env::temp_dir().join(format!("saw-runtime-{prefix}-{nanos}"));
         fs::create_dir_all(&path).unwrap();
         path
+    }
+
+    fn ts(seconds_after_start: i64) -> chrono::DateTime<Utc> {
+        Utc.with_ymd_and_hms(2026, 3, 24, 12, 0, 0)
+            .single()
+            .unwrap()
+            + ChronoDuration::seconds(seconds_after_start)
     }
 
     fn write_session_fixture(
@@ -776,5 +990,80 @@ mod tests {
         fs::remove_dir_all(home).unwrap();
         fs::remove_dir_all(project).unwrap();
         fs::remove_dir_all(log_dir).unwrap();
+    }
+
+    #[test]
+    fn runtime_monitor_tracks_transient_retry_recovery() {
+        let mut monitor = RuntimeMonitor::new(ts(0));
+
+        assert!(monitor.observe_tail_status(&JsonlTailStatus {
+            observed_at: ts(1),
+            state: JsonlTailConnectionState::Retrying {
+                reason: crate::JsonlTailRetryReason::SourceMissing,
+                attempt: 1,
+                next_retry_in: Duration::from_millis(100),
+            },
+            active_path: None,
+        }));
+        assert!(matches!(
+            monitor.snapshot().connection_state,
+            RuntimeConnectionState::Reconnecting {
+                reason: RuntimeReconnectReason::SourceMissing,
+                attempt: 1,
+                ..
+            }
+        ));
+
+        assert!(monitor.observe_tail_status(&JsonlTailStatus {
+            observed_at: ts(2),
+            state: JsonlTailConnectionState::Healthy,
+            active_path: None,
+        }));
+        assert_eq!(
+            monitor.snapshot().connection_state,
+            RuntimeConnectionState::Healthy
+        );
+    }
+
+    #[test]
+    fn runtime_monitor_marks_process_exit_as_fatal() {
+        let mut monitor = RuntimeMonitor::new(ts(0));
+        monitor.observe_event(&AgentEvent::ProcessMetrics(ProcessMetrics {
+            timestamp: ts(1),
+            process_alive: false,
+            cpu_percent: 0.0,
+            rss_bytes: 0,
+            virtual_bytes: 0,
+            io_read_bytes: 0,
+            io_write_bytes: 0,
+            io_read_rate: 0.0,
+            io_write_rate: 0.0,
+        }));
+
+        assert_eq!(
+            monitor.snapshot().connection_state,
+            RuntimeConnectionState::Fatal {
+                reason: RuntimeFatalReason::ProcessExited,
+            }
+        );
+    }
+
+    #[test]
+    fn runtime_monitor_tracks_sleep_wake_recovery() {
+        let mut monitor = RuntimeMonitor::new(ts(0));
+        assert!(monitor.observe_tail_status(&JsonlTailStatus {
+            observed_at: ts(1),
+            state: JsonlTailConnectionState::SleepWakeRecovery {
+                observed_gap: Duration::from_secs(30),
+            },
+            active_path: None,
+        }));
+
+        assert_eq!(
+            monitor.snapshot().connection_state,
+            RuntimeConnectionState::SleepWakeRecovery {
+                observed_gap: Duration::from_secs(30),
+            }
+        );
     }
 }

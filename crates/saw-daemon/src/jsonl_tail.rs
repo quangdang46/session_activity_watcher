@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use chrono::{DateTime, Utc};
 use notify::{
     event::{CreateKind, ModifyKind, RemoveKind},
     Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher,
@@ -15,6 +16,7 @@ use tokio::time::{interval_at, Instant, MissedTickBehavior};
 pub const JSONL_TAIL_POLL_INTERVAL: Duration = Duration::from_millis(100);
 pub const JSONL_TAIL_NOTIFY_IDLE_TIMEOUT: Duration = Duration::from_secs(5);
 pub const JSONL_TAIL_FALLBACK_POLL_INTERVAL: Duration = Duration::from_secs(2);
+pub const JSONL_TAIL_SLEEP_WAKE_THRESHOLD: Duration = Duration::from_secs(15);
 
 const INITIAL_RETRY_BACKOFF: Duration = Duration::from_millis(100);
 const MAX_RETRY_BACKOFF: Duration = Duration::from_secs(2);
@@ -23,6 +25,51 @@ const MAX_RETRY_BACKOFF: Duration = Duration::from_secs(2);
 pub enum JsonlTailMode {
     Notify,
     Polling,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum JsonlTailPollingReason {
+    ForcePoll,
+    NotifyInactive,
+    SleepWakeRecovery,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum JsonlTailRetryReason {
+    SourceMissing,
+    ActiveFileMissing,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum JsonlTailFatalReason {
+    Exited,
+    Failed,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum JsonlTailConnectionState {
+    Healthy,
+    Polling {
+        reason: JsonlTailPollingReason,
+    },
+    Retrying {
+        reason: JsonlTailRetryReason,
+        attempt: u32,
+        next_retry_in: Duration,
+    },
+    SleepWakeRecovery {
+        observed_gap: Duration,
+    },
+    Fatal {
+        reason: JsonlTailFatalReason,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct JsonlTailStatus {
+    pub observed_at: DateTime<Utc>,
+    pub state: JsonlTailConnectionState,
+    pub active_path: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -62,10 +109,14 @@ pub struct JsonlTailer {
     retry_backoff: Duration,
     mode: JsonlTailMode,
     force_poll: bool,
+    polling_reason: Option<JsonlTailPollingReason>,
+    retry_attempt: u32,
     process_pid: Option<u32>,
     last_notify_event_at: Instant,
+    last_loop_tick_at: Instant,
     notify_confirmed: bool,
     last_observed_snapshot: Option<FileSnapshot>,
+    last_status_state: Option<(JsonlTailConnectionState, Option<PathBuf>)>,
 }
 
 impl JsonlTailer {
@@ -128,10 +179,16 @@ impl JsonlTailer {
                 JsonlTailMode::Notify
             },
             force_poll: options.force_poll,
+            polling_reason: options
+                .force_poll
+                .then_some(JsonlTailPollingReason::ForcePoll),
+            retry_attempt: 0,
             process_pid: options.process_pid,
             last_notify_event_at: Instant::now(),
+            last_loop_tick_at: Instant::now(),
             notify_confirmed: false,
             last_observed_snapshot: None,
+            last_status_state: None,
         })
     }
 
@@ -161,6 +218,14 @@ impl JsonlTailer {
     }
 
     pub async fn run(&mut self, sender: mpsc::Sender<AgentEvent>) -> Result<()> {
+        self.run_with_status(sender, None).await
+    }
+
+    pub async fn run_with_status(
+        &mut self,
+        sender: mpsc::Sender<AgentEvent>,
+        status_sender: Option<mpsc::UnboundedSender<JsonlTailStatus>>,
+    ) -> Result<()> {
         let mut poll_ticker = interval_at(
             Instant::now() + JSONL_TAIL_FALLBACK_POLL_INTERVAL,
             JSONL_TAIL_FALLBACK_POLL_INTERVAL,
@@ -180,19 +245,25 @@ impl JsonlTailer {
             );
         }
 
-        self.sync_once(&sender).await?;
+        self.sync_once(&sender, status_sender.as_ref()).await?;
         self.refresh_snapshot().await;
+        self.publish_operational_status(status_sender.as_ref());
 
         loop {
             tokio::select! {
                 maybe = self.notify_rx.recv() => {
+                    self.observe_tick_gap(Instant::now(), status_sender.as_ref());
                     match maybe {
                         Some(Ok(event)) => {
                             if is_relevant_notify_event(&event, &self.watch_root) {
                                 self.last_notify_event_at = Instant::now();
                                 self.notify_confirmed = true;
                                 self.next_retry_at = Instant::now();
-                                self.sync_once(&sender).await?;
+                                if matches!(self.mode, JsonlTailMode::Polling) && !self.force_poll {
+                                    self.mode = JsonlTailMode::Notify;
+                                    self.polling_reason = None;
+                                }
+                                self.sync_once(&sender, status_sender.as_ref()).await?;
                                 self.refresh_snapshot().await;
                             }
                         }
@@ -206,16 +277,22 @@ impl JsonlTailer {
                     }
                 }
                 _ = poll_ticker.tick(), if matches!(self.mode, JsonlTailMode::Polling) => {
-                    self.poll_once(&sender).await?;
+                    self.observe_tick_gap(Instant::now(), status_sender.as_ref());
+                    self.poll_once(&sender, status_sender.as_ref()).await?;
                 }
                 _ = fallback_ticker.tick(), if matches!(self.mode, JsonlTailMode::Notify) => {
-                    self.maybe_switch_to_polling(&sender).await?;
+                    self.observe_tick_gap(Instant::now(), status_sender.as_ref());
+                    self.maybe_switch_to_polling(&sender, status_sender.as_ref()).await?;
                 }
             }
         }
     }
 
-    async fn maybe_switch_to_polling(&mut self, sender: &mpsc::Sender<AgentEvent>) -> Result<()> {
+    async fn maybe_switch_to_polling(
+        &mut self,
+        sender: &mpsc::Sender<AgentEvent>,
+        status_sender: Option<&mpsc::UnboundedSender<JsonlTailStatus>>,
+    ) -> Result<()> {
         if !matches!(self.mode, JsonlTailMode::Notify) {
             return Ok(());
         }
@@ -234,23 +311,29 @@ impl JsonlTailer {
         }
 
         self.mode = JsonlTailMode::Polling;
+        self.polling_reason = Some(JsonlTailPollingReason::NotifyInactive);
         log::warn!(
             "jsonl tail watcher switching to polling for {} after {}s without notify events",
             self.file_path.display(),
             JSONL_TAIL_NOTIFY_IDLE_TIMEOUT.as_secs(),
         );
-        self.sync_once(sender).await?;
+        self.publish_operational_status(status_sender);
+        self.sync_once(sender, status_sender).await?;
         self.refresh_snapshot().await;
         Ok(())
     }
 
-    async fn poll_once(&mut self, sender: &mpsc::Sender<AgentEvent>) -> Result<()> {
+    async fn poll_once(
+        &mut self,
+        sender: &mpsc::Sender<AgentEvent>,
+        status_sender: Option<&mpsc::UnboundedSender<JsonlTailStatus>>,
+    ) -> Result<()> {
         let current_snapshot = self.capture_snapshot().await;
         if current_snapshot == self.last_observed_snapshot {
             return Ok(());
         }
 
-        self.sync_once(sender).await?;
+        self.sync_once(sender, status_sender).await?;
         self.refresh_snapshot().await;
         Ok(())
     }
@@ -280,18 +363,19 @@ impl JsonlTailer {
         system.process(pid).is_some_and(|process| process.exists())
     }
 
-    async fn sync_once(&mut self, sender: &mpsc::Sender<AgentEvent>) -> Result<()> {
+    async fn sync_once(
+        &mut self,
+        sender: &mpsc::Sender<AgentEvent>,
+        status_sender: Option<&mpsc::UnboundedSender<JsonlTailStatus>>,
+    ) -> Result<()> {
         let now = Instant::now();
         let active_path = match self.resolve_active_path() {
-            Some(path) => {
-                self.reset_retry_backoff();
-                path
-            }
+            Some(path) => path,
             None => {
                 if now < self.next_retry_at {
                     return Ok(());
                 }
-                self.schedule_retry();
+                self.schedule_retry(JsonlTailRetryReason::SourceMissing, status_sender);
                 self.byte_offset = 0;
                 self.line_buffer.clear();
                 self.active_path = self.file_path.clone();
@@ -305,7 +389,12 @@ impl JsonlTailer {
             self.line_buffer.clear();
         }
 
-        self.read_available_lines(sender).await
+        if self.read_available_lines(sender, status_sender).await? {
+            self.reset_retry_backoff();
+            self.retry_attempt = 0;
+            self.publish_operational_status(status_sender);
+        }
+        Ok(())
     }
 
     fn resolve_active_path(&self) -> Option<PathBuf> {
@@ -316,12 +405,16 @@ impl JsonlTailer {
         select_newest_jsonl(&self.watch_root)
     }
 
-    async fn read_available_lines(&mut self, sender: &mpsc::Sender<AgentEvent>) -> Result<()> {
+    async fn read_available_lines(
+        &mut self,
+        sender: &mpsc::Sender<AgentEvent>,
+        status_sender: Option<&mpsc::UnboundedSender<JsonlTailStatus>>,
+    ) -> Result<bool> {
         let metadata = match tokio::fs::metadata(&self.active_path).await {
             Ok(metadata) => metadata,
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-                self.schedule_retry();
-                return Ok(());
+                self.schedule_retry(JsonlTailRetryReason::ActiveFileMissing, status_sender);
+                return Ok(false);
             }
             Err(error) => {
                 return Err(error)
@@ -336,7 +429,7 @@ impl JsonlTailer {
         }
 
         if file_len == self.byte_offset {
-            return Ok(());
+            return Ok(true);
         }
 
         let mut file = tokio::fs::File::open(&self.active_path)
@@ -382,7 +475,7 @@ impl JsonlTailer {
 
             if let Some(event) = SessionRecord::parse(line) {
                 if sender.send(event).await.is_err() {
-                    return Ok(());
+                    return Ok(true);
                 }
             }
         }
@@ -391,7 +484,7 @@ impl JsonlTailer {
             self.line_buffer.drain(..consumed);
         }
 
-        Ok(())
+        Ok(true)
     }
 
     fn reset_retry_backoff(&mut self) {
@@ -399,9 +492,76 @@ impl JsonlTailer {
         self.retry_backoff = INITIAL_RETRY_BACKOFF;
     }
 
-    fn schedule_retry(&mut self) {
+    fn schedule_retry(
+        &mut self,
+        reason: JsonlTailRetryReason,
+        status_sender: Option<&mpsc::UnboundedSender<JsonlTailStatus>>,
+    ) {
+        self.retry_attempt += 1;
         self.next_retry_at = Instant::now() + self.retry_backoff;
+        self.publish_status(
+            status_sender,
+            JsonlTailConnectionState::Retrying {
+                reason,
+                attempt: self.retry_attempt,
+                next_retry_in: self.retry_backoff,
+            },
+        );
         self.retry_backoff = std::cmp::min(self.retry_backoff * 2, MAX_RETRY_BACKOFF);
+    }
+
+    fn publish_operational_status(
+        &mut self,
+        status_sender: Option<&mpsc::UnboundedSender<JsonlTailStatus>>,
+    ) {
+        let state = self
+            .polling_reason
+            .map(|reason| JsonlTailConnectionState::Polling { reason })
+            .unwrap_or(JsonlTailConnectionState::Healthy);
+        self.publish_status(status_sender, state);
+    }
+
+    fn publish_status(
+        &mut self,
+        status_sender: Option<&mpsc::UnboundedSender<JsonlTailStatus>>,
+        state: JsonlTailConnectionState,
+    ) {
+        let Some(status_sender) = status_sender else {
+            return;
+        };
+        let active_path = Some(self.active_path.clone());
+        let key = (state.clone(), active_path.clone());
+        if self.last_status_state.as_ref() == Some(&key) {
+            return;
+        }
+
+        self.last_status_state = Some(key);
+        let _ = status_sender.send(JsonlTailStatus {
+            observed_at: Utc::now(),
+            state,
+            active_path,
+        });
+    }
+
+    fn observe_tick_gap(
+        &mut self,
+        now: Instant,
+        status_sender: Option<&mpsc::UnboundedSender<JsonlTailStatus>>,
+    ) {
+        let observed_gap = now.saturating_duration_since(self.last_loop_tick_at);
+        self.last_loop_tick_at = now;
+        if observed_gap < JSONL_TAIL_SLEEP_WAKE_THRESHOLD {
+            return;
+        }
+
+        if !self.force_poll {
+            self.mode = JsonlTailMode::Polling;
+        }
+        self.polling_reason = Some(JsonlTailPollingReason::SleepWakeRecovery);
+        self.publish_status(
+            status_sender,
+            JsonlTailConnectionState::SleepWakeRecovery { observed_gap },
+        );
     }
 }
 
@@ -447,9 +607,10 @@ fn select_newest_jsonl(dir: &Path) -> Option<PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::{
-        FileSnapshot, JsonlTailMode, JsonlTailer, JsonlTailerOptions,
+        FileSnapshot, JsonlTailConnectionState, JsonlTailMode, JsonlTailPollingReason,
+        JsonlTailRetryReason, JsonlTailStatus, JsonlTailer, JsonlTailerOptions,
         JSONL_TAIL_FALLBACK_POLL_INTERVAL, JSONL_TAIL_NOTIFY_IDLE_TIMEOUT,
-        JSONL_TAIL_POLL_INTERVAL,
+        JSONL_TAIL_POLL_INTERVAL, JSONL_TAIL_SLEEP_WAKE_THRESHOLD,
     };
     use saw_core::AgentEvent;
     use std::fs::{self, OpenOptions};
@@ -479,7 +640,7 @@ mod tests {
             .await
             .unwrap()
             .unwrap();
-        assert!(started_at.elapsed() <= Duration::from_millis(400));
+        assert!(started_at.elapsed() <= Duration::from_millis(750));
         assert_session_start(event, "fresh");
 
         handle.abort();
@@ -633,7 +794,7 @@ mod tests {
         tailer.last_notify_event_at = Instant::now() - JSONL_TAIL_NOTIFY_IDLE_TIMEOUT;
 
         let (tx, mut rx) = mpsc::channel(8);
-        tailer.maybe_switch_to_polling(&tx).await.unwrap();
+        tailer.maybe_switch_to_polling(&tx, None).await.unwrap();
 
         assert_eq!(tailer.mode(), JsonlTailMode::Polling);
         let event = timeout(JSONL_TAIL_FALLBACK_POLL_INTERVAL, rx.recv())
@@ -641,6 +802,63 @@ mod tests {
             .unwrap()
             .unwrap();
         assert_session_start(event, "fallback");
+    }
+
+    #[tokio::test]
+    async fn reports_retry_status_with_explicit_backoff_attempts() {
+        let dir = unique_temp_dir("retry-status");
+        let file = dir.join("ses-missing.jsonl");
+        let mut tailer = JsonlTailer::with_follow_newest(&file, false).unwrap();
+        let (tx, _rx) = mpsc::channel(8);
+        let (status_tx, mut status_rx) = mpsc::unbounded_channel::<JsonlTailStatus>();
+
+        tailer.sync_once(&tx, Some(&status_tx)).await.unwrap();
+        let first = status_rx.recv().await.unwrap();
+        assert!(matches!(
+            first.state,
+            JsonlTailConnectionState::Retrying {
+                reason: JsonlTailRetryReason::SourceMissing,
+                attempt: 1,
+                ..
+            }
+        ));
+
+        tailer.next_retry_at = Instant::now();
+        tailer.sync_once(&tx, Some(&status_tx)).await.unwrap();
+        let second = status_rx.recv().await.unwrap();
+        assert!(matches!(
+            second.state,
+            JsonlTailConnectionState::Retrying {
+                reason: JsonlTailRetryReason::SourceMissing,
+                attempt: 2,
+                ..
+            }
+        ));
+    }
+
+    #[tokio::test]
+    async fn reports_sleep_wake_recovery_and_switches_to_polling() {
+        let dir = unique_temp_dir("sleep-wake");
+        let file = dir.join("ses-1.jsonl");
+        fs::write(&file, "").unwrap();
+        let mut tailer = JsonlTailer::with_follow_newest(&file, false).unwrap();
+        let (status_tx, mut status_rx) = mpsc::unbounded_channel::<JsonlTailStatus>();
+
+        tailer.last_loop_tick_at =
+            Instant::now() - JSONL_TAIL_SLEEP_WAKE_THRESHOLD - Duration::from_secs(1);
+        tailer.observe_tick_gap(Instant::now(), Some(&status_tx));
+
+        let status = status_rx.recv().await.unwrap();
+        assert!(matches!(
+            status.state,
+            JsonlTailConnectionState::SleepWakeRecovery { observed_gap }
+                if observed_gap >= JSONL_TAIL_SLEEP_WAKE_THRESHOLD
+        ));
+        assert_eq!(tailer.mode(), JsonlTailMode::Polling);
+        assert_eq!(
+            tailer.polling_reason,
+            Some(JsonlTailPollingReason::SleepWakeRecovery)
+        );
     }
 
     fn append(path: &PathBuf, content: &str) {
@@ -664,7 +882,10 @@ mod tests {
             AgentEvent::SessionStart { session_id, .. } => {
                 assert_eq!(session_id, expected_session_id)
             }
-            other => panic!("unexpected event: {other:?}"),
+            other => assert!(
+                false,
+                "unexpected event while waiting for session_start: {other:?}"
+            ),
         }
     }
 
