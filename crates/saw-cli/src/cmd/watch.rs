@@ -1,7 +1,6 @@
 use crate::cmd::common::{
-    display_path, force_kill_pid, home_dir, interrupt_pid, list_alive_session_selections,
-    normalize_guard_paths, phase_label, refresh_task_context, sample_process_metrics,
-    save_checkpoint, sessions_for_cwd, SessionSelection,
+    display_path, force_kill_pid, home_dir, interrupt_pid, phase_label, refresh_task_context,
+    save_checkpoint,
 };
 use crate::cmd::config::{
     load_user_config, merge_on_stuck_action, merge_timeout_secs, TimeoutSetting,
@@ -9,22 +8,20 @@ use crate::cmd::config::{
 use anyhow::{Context, Result};
 use chrono::{DateTime, SecondsFormat, Utc};
 use clap::{Args, ValueEnum};
-use saw_core::{
-    classify, compute_silence, AgentEvent, AgentPhase, AgentState, ClassifierConfig, SessionRecord,
-};
+use saw_core::{compute_silence, AgentPhase, AgentState, ClassifierConfig};
 use saw_daemon::{
-    AlertActionExecutor, AlertContext, AlertNotification, Alerter, AlerterConfig, EventBus,
-    JsonlTailer, JsonlTailerOptions, ProcessMonitor, ScopeLeakAction as DaemonScopeLeakAction,
-    StuckAction as DaemonStuckAction, DEFAULT_ALERT_RATE_LIMIT,
+    AlertActionExecutor, AlertContext, AlertNotification, Alerter, AlerterConfig,
+    RuntimeStateRefresher, ScopeLeakAction as DaemonScopeLeakAction,
+    StuckAction as DaemonStuckAction, WatcherRuntime, WatcherRuntimeOptions, WatcherRuntimeTarget,
+    DEFAULT_ALERT_RATE_LIMIT,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::fs::File;
-use std::io::{BufRead, BufReader, Write};
+use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::runtime::Builder;
-use tokio::sync::mpsc;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum, Serialize, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
@@ -86,12 +83,14 @@ pub struct WatchArgs {
     pub force_poll: bool,
 }
 
-#[derive(Debug, Clone)]
-struct WatchTarget {
-    cwd: PathBuf,
-    pid: Option<u32>,
-    jsonl_path: PathBuf,
-    session_id: Option<String>,
+type WatchTarget = WatcherRuntimeTarget;
+
+struct WatchStateRefresher;
+
+impl RuntimeStateRefresher for WatchStateRefresher {
+    fn refresh(&self, state: &mut AgentState, _cwd: &Path) -> Result<()> {
+        refresh_task_context(&home_dir()?, state)
+    }
 }
 
 pub fn run(args: WatchArgs) -> Result<()> {
@@ -112,8 +111,29 @@ fn resolve_runtime_settings(args: &WatchArgs) -> Result<(u64, StuckAction)> {
 
 async fn run_async(args: WatchArgs) -> Result<()> {
     let (timeout_secs, on_stuck) = resolve_runtime_settings(&args)?;
-    let target = resolve_watch_target(&args)?;
-    let mut state = load_initial_state(&target, &args)?;
+    let classifier_config = ClassifierConfig {
+        thinking_after: Duration::from_secs(45),
+        api_hang_after: Duration::from_secs(timeout_secs),
+        idle_after: Duration::from_secs(600),
+        ..ClassifierConfig::default()
+    };
+    let refresher = Arc::new(WatchStateRefresher);
+    let mut runtime = WatcherRuntime::attach(
+        WatcherRuntimeOptions {
+            home_dir: home_dir()?,
+            cwd: args.dir.clone(),
+            file: args.file.clone(),
+            pid: args.pid,
+            session_id: args.session.clone(),
+            guard_paths: args.guard.clone(),
+            force_poll: args.force_poll,
+            classifier_config,
+        },
+        refresher,
+    )?;
+    let target = runtime.target().clone();
+    let initial = runtime.initial_update();
+    let mut state = initial.state.clone();
     let mut alerter = Alerter::new(AlerterConfig {
         stuck_action: map_stuck_action(on_stuck),
         scope_leak_action: map_scope_leak_action(args.on_scope_leak),
@@ -123,9 +143,8 @@ async fn run_async(args: WatchArgs) -> Result<()> {
         rate_limit: DEFAULT_ALERT_RATE_LIMIT,
     });
     let mut executor = WatchActionExecutor;
-    let initial_timestamp = Utc::now();
-    let current_phase = classify_phase(&state, timeout_secs, initial_timestamp);
-    state.phase = current_phase.clone();
+    let initial_timestamp = initial.timestamp;
+    let current_phase = initial.phase.clone();
     let initial_alert = alerter.on_phase_change(
         None,
         &current_phase,
@@ -153,47 +172,19 @@ async fn run_async(args: WatchArgs) -> Result<()> {
     }
 
     if matches!(current_phase, AgentPhase::Dead) {
+        runtime.shutdown().await;
         return Ok(());
     }
-
-    let bus = EventBus::new();
-    let mut receiver = bus.subscribe();
-
-    let (tail_tx, mut tail_rx) = mpsc::channel(256);
-    let tail_bus = bus.clone();
-    let tail_bridge = tokio::spawn(async move {
-        while let Some(event) = tail_rx.recv().await {
-            tail_bus.publish(event);
-        }
-    });
-
-    let mut tailer =
-        JsonlTailer::with_options(&target.jsonl_path, tailer_options(&args, target.pid))
-            .with_context(|| format!("failed to watch {}", target.jsonl_path.display()))?;
-    tailer.set_byte_offset(current_offset(&target.jsonl_path));
-    let tailer_task = tokio::spawn(async move { tailer.run(tail_tx).await });
-
-    let monitor_task = target.pid.map(|pid| {
-        let monitor_bus = bus.clone();
-        tokio::spawn(async move {
-            let mut monitor = ProcessMonitor::new(pid);
-            monitor.run(|event| monitor_bus.publish(event)).await;
-        })
-    });
 
     let mut previous_phase = Some(current_phase);
     let result = loop {
         tokio::select! {
             _ = tokio::signal::ctrl_c() => break Ok(()),
-            event = receiver.recv() => match event {
-                Ok(event) => {
-                    let timestamp = event.timestamp();
-                    state.apply(&event);
-                    if !matches!(event, AgentEvent::ProcessMetrics(_)) {
-                        refresh_task_context(&home_dir()?, &mut state)?;
-                    }
-                    let phase = classify_phase(&state, timeout_secs, timestamp);
-                    state.phase = phase.clone();
+            update = runtime.next_update() => match update? {
+                Some(update) => {
+                    let timestamp = update.timestamp;
+                    state = update.state.clone();
+                    let phase = update.phase.clone();
                     let alert = alerter.on_phase_change(
                         previous_phase.as_ref(),
                         &phase,
@@ -225,141 +216,35 @@ async fn run_async(args: WatchArgs) -> Result<()> {
 
                     previous_phase = Some(phase);
                 }
-                Err(_) => break Ok(()),
+                None => break Ok(()),
             }
         }
     };
 
-    tailer_task.abort();
-    if let Some(task) = monitor_task {
-        task.abort();
-        let _ = task.await;
-    }
-    tail_bridge.abort();
-
-    let _ = tailer_task.await;
-    let _ = tail_bridge.await;
-
+    runtime.shutdown().await;
     result
 }
 
+#[cfg(test)]
 fn resolve_watch_target(args: &WatchArgs) -> Result<WatchTarget> {
-    let requested_cwd = args.dir.canonicalize().unwrap_or_else(|_| args.dir.clone());
-
-    if let Some(file) = args.file.as_ref() {
-        return Ok(WatchTarget {
-            cwd: requested_cwd,
-            pid: args.pid,
-            jsonl_path: file.clone(),
-            session_id: args.session.clone(),
-        });
-    }
-
-    let selection = find_session_for_pid_or_cwd(&requested_cwd, args.pid, args.session.as_deref())?;
-
-    Ok(WatchTarget {
-        cwd: selection.session.cwd_path(),
-        pid: Some(selection.pid),
-        jsonl_path: selection.jsonl_path,
-        session_id: Some(selection.session.session_id),
-    })
-}
-
-fn find_session_for_pid_or_cwd(
-    cwd: &Path,
-    pid: Option<u32>,
-    session_id: Option<&str>,
-) -> Result<SessionSelection> {
-    let home = home_dir()?;
-    let sessions = list_alive_session_selections(&home)?;
-
-    if let Some(pid) = pid {
-        return sessions
-            .into_iter()
-            .find(|selection| selection.pid == pid)
-            .with_context(|| format!("no running Claude Code session found for pid {pid}"));
-    }
-
-    if let Some(session_id) = session_id {
-        return sessions
-            .into_iter()
-            .find(|selection| selection.session.session_id == session_id)
-            .with_context(|| {
-                format!("no running Claude Code session found for session {session_id}")
-            });
-    }
-
-    let cwd_sessions = sessions_for_cwd(&sessions, Some(cwd));
-    cwd_sessions.into_iter().next().context(format!(
-        "no running Claude Code sessions found in ~/.claude/sessions for {}",
-        cwd.display()
-    ))
-}
-
-fn load_initial_state(target: &WatchTarget, args: &WatchArgs) -> Result<AgentState> {
-    let mut state = load_existing_state(&target.jsonl_path)?;
-    state.guard_paths = normalize_guard_paths(&target.cwd, &args.guard);
-    state.session_jsonl_path = Some(target.jsonl_path.clone());
-
-    if state.session_id.is_none() {
-        state.session_id = target.session_id.clone();
-    }
-
-    if let Some(pid) = target.pid {
-        match sample_process_metrics(pid) {
-            Some(metrics) => state.apply(&AgentEvent::ProcessMetrics(metrics)),
-            None => state.process_alive = false,
-        }
-    }
-    refresh_task_context(&home_dir()?, &mut state)?;
-
-    Ok(state)
-}
-
-fn load_existing_state(path: &Path) -> Result<AgentState> {
-    let file = File::open(path).with_context(|| format!("failed to open {}", path.display()))?;
-    let reader = BufReader::new(file);
-    let mut state = AgentState::default();
-
-    for line in reader.lines() {
-        let line = line?;
-        if line.trim().is_empty() {
-            continue;
-        }
-
-        if let Some(event) = SessionRecord::parse(&line) {
-            state.apply(&event);
-        }
-    }
-
-    Ok(state)
-}
-
-fn current_offset(path: &Path) -> u64 {
-    std::fs::metadata(path)
-        .map(|metadata| metadata.len())
-        .unwrap_or(0)
-}
-
-fn tailer_options(args: &WatchArgs, process_pid: Option<u32>) -> JsonlTailerOptions {
-    JsonlTailerOptions {
-        follow_newest: false,
+    saw_daemon::resolve_watch_target(&WatcherRuntimeOptions {
+        home_dir: home_dir()?,
+        cwd: args.dir.clone(),
+        file: args.file.clone(),
+        pid: args.pid,
+        session_id: args.session.clone(),
+        guard_paths: args.guard.clone(),
         force_poll: args.force_poll,
-        process_pid,
-    }
-}
-
-fn classify_phase(state: &AgentState, timeout_secs: u64, now: DateTime<Utc>) -> AgentPhase {
-    classify(
-        state,
-        now,
-        ClassifierConfig {
+        classifier_config: ClassifierConfig {
             thinking_after: Duration::from_secs(45),
-            api_hang_after: Duration::from_secs(timeout_secs),
+            api_hang_after: Duration::from_secs(merge_timeout_secs(
+                args.timeout,
+                &load_user_config()?,
+            )),
             idle_after: Duration::from_secs(600),
             ..ClassifierConfig::default()
         },
-    )
+    })
 }
 
 #[allow(clippy::too_many_arguments)]

@@ -880,6 +880,7 @@ dependencies = [
  "notify",
  "rusqlite",
  "saw-core",
+ "serde",
  "serde_json",
  "sysinfo",
  "tokio",

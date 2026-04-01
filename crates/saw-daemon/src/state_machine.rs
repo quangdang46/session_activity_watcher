@@ -24,6 +24,10 @@ impl StateMachine {
         &self.state
     }
 
+    pub fn state_mut(&mut self) -> &mut AgentState {
+        &mut self.state
+    }
+
     pub fn into_state(self) -> AgentState {
         self.state
     }
@@ -38,6 +42,14 @@ impl StateMachine {
 
     pub fn classify_at(&self, now: DateTime<Utc>) -> AgentPhase {
         classify(&self.state, now, self.classifier_config)
+    }
+
+    pub fn reclassify_at(&mut self, now: DateTime<Utc>) -> Option<AgentPhase> {
+        let previous_phase = self.state.phase.clone();
+        let phase = self.classify_at(now);
+        let changed = phase != previous_phase;
+        self.state.phase = phase.clone();
+        changed.then_some(phase)
     }
 
     /// Applies a single event and returns the new phase when the classifier output changes.
