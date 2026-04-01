@@ -30,11 +30,6 @@ jobs:
             suffix: linux-aarch64
             archive_ext: tar.gz
             use_cross: true
-          - os: macos-13
-            target: x86_64-apple-darwin
-            suffix: macos-x86_64
-            archive_ext: tar.gz
-            use_cross: false
           - os: macos-14
             target: aarch64-apple-darwin
             suffix: macos-aarch64
